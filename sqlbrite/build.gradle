@@ -8,6 +8,7 @@ dependencies {
   androidTestImplementation rootProject.ext.supportTestRunner
   androidTestImplementation rootProject.ext.truth
   androidTestImplementation rootProject.ext.supportSqliteFramework
+  androidTestImplementation rootProject.ext.supportTestRules
 
   lintChecks project(':sqlbrite-lint')
 }
@@ -32,8 +33,11 @@ android {
   }
 
   // TODO replace with https://issuetracker.google.com/issues/72050365 once released.
-  libraryVariants.all {
-    it.generateBuildConfig.enabled = false
+  libraryVariants.all { variant ->
+    // https://stackoverflow.com/a/52504256/9636
+    variant.generateBuildConfigProvider.configure {
+      it.enabled = false
+    }
   }
 }
 

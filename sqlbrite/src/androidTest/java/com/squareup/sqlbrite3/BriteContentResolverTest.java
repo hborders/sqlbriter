@@ -15,28 +15,46 @@
  */
 package com.squareup.sqlbrite3;
 
+import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
-import android.test.ProviderTestCase2;
-import android.test.mock.MockContentProvider;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.test.rule.provider.ProviderTestRule;
+import android.support.test.runner.AndroidJUnit4;
+
 import com.squareup.sqlbrite3.SqlBrite.Query;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.ObservableTransformer;
-import io.reactivex.subjects.PublishSubject;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.runner.RunWith;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.ObservableTransformer;
+import io.reactivex.subjects.PublishSubject;
 
 import static com.google.common.truth.Truth.assertThat;
 
-public final class BriteContentResolverTest
-    extends ProviderTestCase2<BriteContentResolverTest.TestContentProvider> {
-  private static final Uri AUTHORITY = Uri.parse("content://test_authority");
+public final class BriteContentResolverTest {
+
+  @NonNull private static final Uri AUTHORITY = Objects.requireNonNull(Uri.parse("content://test_authority"));
+
+  @Rule
+  public ProviderTestRule providerRule = new ProviderTestRule.Builder(
+          TestContentProvider.class, Objects.requireNonNull(AUTHORITY.getAuthority())
+  ).build();
+
   private static final Uri TABLE = AUTHORITY.buildUpon().appendPath("test_table").build();
   private static final String KEY = "test_key";
   private static final String VALUE = "test_value";
@@ -49,13 +67,8 @@ public final class BriteContentResolverTest
   private ContentResolver contentResolver;
   private BriteContentResolver db;
 
-  public BriteContentResolverTest() {
-    super(TestContentProvider.class, AUTHORITY.getAuthority());
-  }
-
-  @Override protected void setUp() throws Exception {
-    super.setUp();
-    contentResolver = getMockContentResolver();
+  @Before protected void setUp() {
+    contentResolver = providerRule.getResolver();
 
     SqlBrite.Logger logger = new SqlBrite.Logger() {
       @Override public void log(String message) {
@@ -69,11 +82,9 @@ public final class BriteContentResolverTest
           }
         };
     db = new BriteContentResolver(contentResolver, logger, scheduler, queryTransformer);
-
-    getProvider().init(getContext().getContentResolver());
   }
 
-  @Override public void tearDown() {
+  @After public void tearDown() {
     o.assertNoMoreEvents();
     o.dispose();
   }
@@ -164,7 +175,7 @@ public final class BriteContentResolverTest
     return result;
   }
 
-  public static final class TestContentProvider extends MockContentProvider {
+  public static final class TestContentProvider extends ContentProvider {
     private final Map<String, String> storage = new LinkedHashMap<>();
 
     private ContentResolver contentResolver;
@@ -173,30 +184,47 @@ public final class BriteContentResolverTest
       this.contentResolver = contentResolver;
     }
 
-    @Override public Uri insert(Uri uri, ContentValues values) {
-      storage.put(values.getAsString(KEY), values.getAsString(VALUE));
-      contentResolver.notifyChange(uri, null);
-      return Uri.parse(AUTHORITY + "/" + values.getAsString(KEY));
+
+    @Override
+    public boolean onCreate() {
+      throw new UnsupportedOperationException("unimplemented mock method");
     }
 
-    @Override public int update(Uri uri, ContentValues values, String selection,
-        String[] selectionArgs) {
+    @Override
+    public String getType(@NonNull Uri uri) {
+      throw new UnsupportedOperationException("unimplemented mock method");
+    }
+
+    @Override public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
+      if (values != null) {
+        storage.put(values.getAsString(KEY), values.getAsString(VALUE));
+        contentResolver.notifyChange(uri, null);
+        return Uri.parse(AUTHORITY + "/" + values.getAsString(KEY));
+      } else {
+        return AUTHORITY;
+      }
+    }
+
+    @Override public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection,
+        @Nullable String[] selectionArgs) {
       for (String key : storage.keySet()) {
-        storage.put(key, values.getAsString(VALUE));
+        if (values != null) {
+          storage.put(key, values.getAsString(VALUE));
+        }
       }
       contentResolver.notifyChange(uri, null);
       return storage.size();
     }
 
-    @Override public int delete(Uri uri, String selection, String[] selectionArgs) {
+    @Override public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
       int result = storage.size();
       storage.clear();
       contentResolver.notifyChange(uri, null);
       return result;
     }
 
-    @Override public Cursor query(Uri uri, String[] projection, String selection,
-        String[] selectionArgs, String sortOrder) {
+    @Override public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection,
+        @Nullable String[] selectionArgs, @Nullable String sortOrder) {
       MatrixCursor result = new MatrixCursor(new String[] { KEY, VALUE });
       for (Map.Entry<String, String> entry : storage.entrySet()) {
         result.addRow(new Object[] { entry.getKey(), entry.getValue() });
