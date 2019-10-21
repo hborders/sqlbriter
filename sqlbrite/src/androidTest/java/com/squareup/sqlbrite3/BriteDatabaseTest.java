@@ -72,7 +72,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.fail;
 
-@RunWith(AndroidJUnit4.class) //
 public final class BriteDatabaseTest {
   private final TestDb testDb = new TestDb();
   private final List<String> logs = new ArrayList<>();
