@@ -27,13 +27,13 @@ public final class SqlBriteTest {
       builder.logger(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("logger == null");
+      assertThat(e).hasMessageThat().isEqualTo("logger == null");
     }
     try {
       builder.queryTransformer(null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("queryTransformer == null");
+      assertThat(e).hasMessageThat().isEqualTo("queryTransformer == null");
     }
   }
 

@@ -22,6 +22,7 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.squareup.sqlbrite3.SqlBrite.Query;
 
 class RecordingObserver extends DisposableObserver<Query> {
@@ -83,12 +84,14 @@ class RecordingObserver extends DisposableObserver<Query> {
     }
 
     public CursorAssert hasRow(Object... values) {
-      assertThat(cursor.moveToNext()).named("row " + (row + 1) + " exists").isTrue();
+      assertWithMessage("row " + (row + 1) + " exists")
+          .that(cursor.moveToNext()).isTrue();
       row += 1;
-      assertThat(cursor.getColumnCount()).named("column count").isEqualTo(values.length);
+      assertWithMessage("column count")
+          .that(cursor.getColumnCount()).isEqualTo(values.length);
       for (int i = 0; i < values.length; i++) {
-        assertThat(cursor.getString(i))
-            .named("row " + row + " column '" + cursor.getColumnName(i) + "'")
+        assertWithMessage("row " + row + " column '" + cursor.getColumnName(i) + "'")
+            .that(cursor.getString(i))
             .isEqualTo(values[i]);
       }
       return this;
