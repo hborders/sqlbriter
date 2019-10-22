@@ -23,10 +23,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.CheckedTextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.example.sqlbrite.todo.db.TodoItem;
 import io.reactivex.functions.Consumer;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 final class ItemsAdapter extends BaseAdapter implements Consumer<List<TodoItem>> {
   private final LayoutInflater inflater;
@@ -58,24 +63,29 @@ final class ItemsAdapter extends BaseAdapter implements Consumer<List<TodoItem>>
     return true;
   }
 
-  @Override public View getView(int position, View convertView, ViewGroup parent) {
+  @Override public View getView(int position, @Nullable View convertView, @Nullable ViewGroup parent) {
+    @NonNull final CheckedTextView textView;
     if (convertView == null) {
-      convertView = inflater.inflate(android.R.layout.simple_list_item_multiple_choice, parent, false);
+      textView = (CheckedTextView) inflater.inflate(android.R.layout.simple_list_item_multiple_choice, parent, false);
+    } else {
+      textView = (CheckedTextView) convertView;
     }
 
-    TodoItem item = getItem(position);
-    CheckedTextView textView = (CheckedTextView) convertView;
+    @NonNull final TodoItem item = Objects.requireNonNull(getItem(position));
     textView.setChecked(item.complete());
 
-    CharSequence description = item.description();
+    @NonNull final CharSequence description;
     if (item.complete()) {
-      SpannableString spannable = new SpannableString(description);
-      spannable.setSpan(new StrikethroughSpan(), 0, description.length(), 0);
+      @NonNull final String itemDescription = item.description();
+      @NonNull final SpannableString spannable = new SpannableString(itemDescription);
+      spannable.setSpan(new StrikethroughSpan(), 0, itemDescription.length(), 0);
       description = spannable;
+    } else {
+      description = item.description();
     }
 
     textView.setText(description);
 
-    return convertView;
+    return textView;
   }
 }

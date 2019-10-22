@@ -16,21 +16,21 @@
 package com.squareup.sqlbrite3;
 
 import android.annotation.TargetApi;
-import android.arch.persistence.db.SimpleSQLiteQuery;
-import android.arch.persistence.db.SupportSQLiteDatabase;
-import android.arch.persistence.db.SupportSQLiteOpenHelper;
-import android.arch.persistence.db.SupportSQLiteOpenHelper.Configuration;
-import android.arch.persistence.db.SupportSQLiteOpenHelper.Factory;
-import android.arch.persistence.db.SupportSQLiteStatement;
-import android.arch.persistence.db.framework.FrameworkSQLiteOpenHelperFactory;
+import androidx.sqlite.db.SimpleSQLiteQuery;
+import androidx.sqlite.db.SupportSQLiteDatabase;
+import androidx.sqlite.db.SupportSQLiteOpenHelper;
+import androidx.sqlite.db.SupportSQLiteOpenHelper.Configuration;
+import androidx.sqlite.db.SupportSQLiteOpenHelper.Factory;
+import androidx.sqlite.db.SupportSQLiteStatement;
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.os.Build;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.SdkSuppress;
-import android.support.test.runner.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.filters.SdkSuppress;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.squareup.sqlbrite3.BriteDatabase.Transaction;
 import com.squareup.sqlbrite3.RecordingObserver.CursorAssert;
 import com.squareup.sqlbrite3.TestDb.Employee;
@@ -85,7 +85,9 @@ public final class BriteDatabaseTest {
   private BriteDatabase db;
 
   @Before public void setUp() throws IOException {
-    Configuration configuration = Configuration.builder(InstrumentationRegistry.getContext())
+    Configuration configuration = Configuration.builder(
+            InstrumentationRegistry.getInstrumentation().getTargetContext()
+    )
         .callback(testDb)
         .name(dbFolder.newFile().getPath())
         .build();

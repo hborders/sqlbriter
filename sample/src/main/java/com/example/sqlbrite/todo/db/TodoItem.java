@@ -18,7 +18,13 @@ package com.example.sqlbrite.todo.db;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.Parcelable;
+
+import androidx.annotation.NonNull;
+
 import com.google.auto.value.AutoValue;
+
+import java.util.Objects;
+
 import io.reactivex.functions.Function;
 
 @AutoValue
@@ -32,43 +38,43 @@ public abstract class TodoItem implements Parcelable {
 
   public abstract long id();
   public abstract long listId();
-  public abstract String description();
+  @NonNull public abstract String description();
   public abstract boolean complete();
 
   public static final Function<Cursor, TodoItem> MAPPER = new Function<Cursor, TodoItem>() {
     @Override public TodoItem apply(Cursor cursor) {
       long id = Db.getLong(cursor, ID);
       long listId = Db.getLong(cursor, LIST_ID);
-      String description = Db.getString(cursor, DESCRIPTION);
+      @NonNull String description = Objects.requireNonNull(Db.getString(cursor, DESCRIPTION));
       boolean complete = Db.getBoolean(cursor, COMPLETE);
       return new AutoValue_TodoItem(id, listId, description, complete);
     }
   };
 
   public static final class Builder {
-    private final ContentValues values = new ContentValues();
+    @NonNull private final ContentValues values = new ContentValues();
 
-    public Builder id(long id) {
+    @NonNull public Builder id(long id) {
       values.put(ID, id);
       return this;
     }
 
-    public Builder listId(long listId) {
+    @NonNull public Builder listId(long listId) {
       values.put(LIST_ID, listId);
       return this;
     }
 
-    public Builder description(String description) {
+    @NonNull public Builder description(@NonNull String description) {
       values.put(DESCRIPTION, description);
       return this;
     }
 
-    public Builder complete(boolean complete) {
+    @NonNull public Builder complete(boolean complete) {
       values.put(COMPLETE, complete ? Db.BOOLEAN_TRUE : Db.BOOLEAN_FALSE);
       return this;
     }
 
-    public ContentValues build() {
+    @NonNull public ContentValues build() {
       return values; // TODO defensive copy?
     }
   }

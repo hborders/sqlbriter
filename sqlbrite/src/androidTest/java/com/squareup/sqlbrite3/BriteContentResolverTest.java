@@ -20,12 +20,12 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.test.InstrumentationRegistry;
 import android.test.ProviderTestCase2;
 import android.test.mock.MockContentProvider;
-import android.test.mock.MockContentResolver;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.squareup.sqlbrite3.SqlBrite.Query;
 
@@ -83,7 +83,7 @@ public final class BriteContentResolverTest
 
 
     @NonNull final ContentResolver applicationContextContentResolver =
-        Objects.requireNonNull(InstrumentationRegistry.getTargetContext().getContentResolver());
+        Objects.requireNonNull(ApplicationProvider.getApplicationContext().getContentResolver());
 
     getProvider().init(applicationContextContentResolver);
   }

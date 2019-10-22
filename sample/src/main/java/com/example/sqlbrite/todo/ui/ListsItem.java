@@ -17,6 +17,9 @@ package com.example.sqlbrite.todo.ui;
 
 import android.database.Cursor;
 import android.os.Parcelable;
+
+import androidx.annotation.NonNull;
+
 import com.example.sqlbrite.todo.db.Db;
 import com.example.sqlbrite.todo.db.TodoItem;
 import com.example.sqlbrite.todo.db.TodoList;
@@ -27,17 +30,17 @@ import java.util.Collection;
 
 @AutoValue
 abstract class ListsItem implements Parcelable {
-  private static String ALIAS_LIST = "list";
-  private static String ALIAS_ITEM = "item";
+  private static final String ALIAS_LIST = "list";
+  private static final String ALIAS_ITEM = "item";
 
-  private static String LIST_ID = ALIAS_LIST + "." + TodoList.ID;
-  private static String LIST_NAME = ALIAS_LIST + "." + TodoList.NAME;
-  private static String ITEM_COUNT = "item_count";
-  private static String ITEM_ID = ALIAS_ITEM + "." + TodoItem.ID;
-  private static String ITEM_LIST_ID = ALIAS_ITEM + "." + TodoItem.LIST_ID;
+  private static final String LIST_ID = ALIAS_LIST + "." + TodoList.ID;
+  private static final String LIST_NAME = ALIAS_LIST + "." + TodoList.NAME;
+  private static final String ITEM_COUNT = "item_count";
+  private static final String ITEM_ID = ALIAS_ITEM + "." + TodoItem.ID;
+  private static final String ITEM_LIST_ID = ALIAS_ITEM + "." + TodoItem.LIST_ID;
 
-  public static Collection<String> TABLES = Arrays.asList(TodoList.TABLE, TodoItem.TABLE);
-  public static String QUERY = ""
+  public static final Collection<String> TABLES = Arrays.asList(TodoList.TABLE, TodoItem.TABLE);
+  public static final String QUERY = ""
       + "SELECT " + LIST_ID + ", " + LIST_NAME + ", COUNT(" + ITEM_ID + ") as " + ITEM_COUNT
       + " FROM " + TodoList.TABLE + " AS " + ALIAS_LIST
       + " LEFT OUTER JOIN " + TodoItem.TABLE + " AS " + ALIAS_ITEM + " ON " + LIST_ID + " = " + ITEM_LIST_ID

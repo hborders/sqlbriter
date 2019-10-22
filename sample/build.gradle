@@ -1,14 +1,12 @@
 apply plugin: 'com.android.application'
 
 dependencies {
-  implementation rootProject.ext.supportV4
+  implementation rootProject.ext.supportFragment
   implementation rootProject.ext.supportAnnotations
 
   implementation rootProject.ext.dagger
   annotationProcessor rootProject.ext.daggerCompiler
 
-  implementation rootProject.ext.butterKnifeRuntime
-  annotationProcessor rootProject.ext.butterKnifeCompiler
   implementation rootProject.ext.timber
   implementation rootProject.ext.rxJava
   implementation rootProject.ext.rxAndroid

@@ -21,9 +21,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+
 import io.reactivex.functions.Consumer;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 final class ListsAdapter extends BaseAdapter implements Consumer<List<ListsItem>> {
   private final LayoutInflater inflater;
@@ -56,13 +60,16 @@ final class ListsAdapter extends BaseAdapter implements Consumer<List<ListsItem>
   }
 
   @Override public View getView(int position, View convertView, ViewGroup parent) {
+    @NonNull final TextView headerTextView;
     if (convertView == null) {
-      convertView = inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+      headerTextView = (TextView) inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+    } else {
+      headerTextView = (TextView) convertView;
     }
 
-    ListsItem item = getItem(position);
-    ((TextView) convertView).setText(item.name() + " (" + item.itemCount() + ")");
+    @NonNull final ListsItem item = Objects.requireNonNull(getItem(position));
+    headerTextView.setText(item.name() + " (" + item.itemCount() + ")");
 
-    return convertView;
+    return headerTextView;
   }
 }

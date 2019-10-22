@@ -21,8 +21,9 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -39,7 +40,6 @@ import io.reactivex.subjects.PublishSubject;
 import javax.inject.Inject;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_NONE;
-import static butterknife.ButterKnife.findById;
 
 public final class NewItemFragment extends DialogFragment {
   private static final String KEY_LIST_ID = "list_id";
@@ -61,16 +61,16 @@ public final class NewItemFragment extends DialogFragment {
     return getArguments().getLong(KEY_LIST_ID);
   }
 
-  @Override public void onAttach(Activity activity) {
-    super.onAttach(activity);
-    TodoApp.getComponent(activity).inject(this);
+  @Override public void onAttach(@NonNull Context context) {
+    super.onAttach(context);
+    TodoApp.getComponent(context).inject(this);
   }
 
-  @NonNull @Override public Dialog onCreateDialog(Bundle savedInstanceState) {
+  @NonNull @Override public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
     final Context context = getActivity();
     View view = LayoutInflater.from(context).inflate(R.layout.new_item, null);
 
-    EditText name = findById(view, android.R.id.input);
+    EditText name = view.findViewById(android.R.id.input);
     Observable.combineLatest(createClicked, RxTextView.textChanges(name),
         new BiFunction<String, CharSequence, String>() {
           @Override public String apply(String ignored, CharSequence text) {

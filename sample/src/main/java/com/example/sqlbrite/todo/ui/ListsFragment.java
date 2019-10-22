@@ -16,20 +16,20 @@
 package com.example.sqlbrite.todo.ui;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.view.MenuItemCompat;
+import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.core.view.MenuItemCompat;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnItemClick;
 import com.example.sqlbrite.todo.R;
 import com.example.sqlbrite.todo.TodoApp;
 import com.squareup.sqlbrite3.BriteDatabase;
@@ -37,8 +37,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import javax.inject.Inject;
 
-import static android.support.v4.view.MenuItemCompat.SHOW_AS_ACTION_IF_ROOM;
-import static android.support.v4.view.MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT;
+import static androidx.core.view.MenuItemCompat.SHOW_AS_ACTION_IF_ROOM;
+import static androidx.core.view.MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT;
 
 public final class ListsFragment extends Fragment {
   interface Listener {
@@ -52,27 +52,24 @@ public final class ListsFragment extends Fragment {
 
   @Inject BriteDatabase db;
 
-  @BindView(android.R.id.list) ListView listView;
-  @BindView(android.R.id.empty) View emptyView;
-
   private Listener listener;
   private ListsAdapter adapter;
   private Disposable disposable;
 
-  @Override public void onAttach(Activity activity) {
-    if (!(activity instanceof Listener)) {
+  @Override public void onAttach(@NonNull Context context) {
+    if (!(context instanceof Listener)) {
       throw new IllegalStateException("Activity must implement fragment Listener.");
     }
 
-    super.onAttach(activity);
-    TodoApp.getComponent(activity).inject(this);
+    super.onAttach(context);
+    TodoApp.getComponent(context).inject(this);
     setHasOptionsMenu(true);
 
-    listener = (Listener) activity;
-    adapter = new ListsAdapter(activity);
+    listener = (Listener) context;
+    adapter = new ListsAdapter(context);
   }
 
-  @Override public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+  @Override public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
     super.onCreateOptionsMenu(menu, inflater);
 
     MenuItem item = menu.add(R.string.new_list)
@@ -91,15 +88,18 @@ public final class ListsFragment extends Fragment {
   }
 
   @Override
-  public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+  public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
-    ButterKnife.bind(this, view);
+    ListView listView = view.findViewById(android.R.id.list);
+    View emptyView = view.findViewById(android.R.id.empty);
     listView.setEmptyView(emptyView);
     listView.setAdapter(adapter);
-  }
-
-  @OnItemClick(android.R.id.list) void listClicked(long listId) {
-    listener.onListClicked(listId);
+    listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+      @Override
+      public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        listener.onListClicked(id);
+      }
+    });
   }
 
   @Override public void onResume() {

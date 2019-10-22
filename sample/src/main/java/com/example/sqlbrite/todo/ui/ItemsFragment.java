@@ -16,11 +16,14 @@
 package com.example.sqlbrite.todo.ui;
 
 import android.app.Activity;
+import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.view.MenuItemCompat;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.core.view.MenuItemCompat;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -28,8 +31,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
 import com.example.sqlbrite.todo.R;
 import com.example.sqlbrite.todo.TodoApp;
 import com.example.sqlbrite.todo.db.Db;
@@ -48,8 +49,8 @@ import io.reactivex.schedulers.Schedulers;
 import javax.inject.Inject;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_NONE;
-import static android.support.v4.view.MenuItemCompat.SHOW_AS_ACTION_IF_ROOM;
-import static android.support.v4.view.MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT;
+import static androidx.core.view.MenuItemCompat.SHOW_AS_ACTION_IF_ROOM;
+import static androidx.core.view.MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT;
 import static com.squareup.sqlbrite3.SqlBrite.Query;
 
 public final class ItemsFragment extends Fragment {
@@ -88,9 +89,6 @@ public final class ItemsFragment extends Fragment {
 
   @Inject BriteDatabase db;
 
-  @BindView(android.R.id.list) ListView listView;
-  @BindView(android.R.id.empty) View emptyView;
-
   private Listener listener;
   private ItemsAdapter adapter;
   private CompositeDisposable disposables;
@@ -99,20 +97,20 @@ public final class ItemsFragment extends Fragment {
     return getArguments().getLong(KEY_LIST_ID);
   }
 
-  @Override public void onAttach(Activity activity) {
-    if (!(activity instanceof Listener)) {
+  @Override public void onAttach(@NonNull Context context) {
+    if (!(context instanceof Listener)) {
       throw new IllegalStateException("Activity must implement fragment Listener.");
     }
 
-    super.onAttach(activity);
-    TodoApp.getComponent(activity).inject(this);
+    super.onAttach(context);
+    TodoApp.getComponent(context).inject(this);
     setHasOptionsMenu(true);
 
-    listener = (Listener) activity;
-    adapter = new ItemsAdapter(activity);
+    listener = (Listener) context;
+    adapter = new ItemsAdapter(context);
   }
 
-  @Override public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+  @Override public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
     super.onCreateOptionsMenu(menu, inflater);
 
     MenuItem item = menu.add(R.string.new_item)
@@ -125,15 +123,16 @@ public final class ItemsFragment extends Fragment {
     MenuItemCompat.setShowAsAction(item, SHOW_AS_ACTION_IF_ROOM | SHOW_AS_ACTION_WITH_TEXT);
   }
 
-  @Override public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
+  @Override public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
       @Nullable Bundle savedInstanceState) {
     return inflater.inflate(R.layout.items, container, false);
   }
 
   @Override
-  public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+  public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
-    ButterKnife.bind(this, view);
+    ListView listView = view.findViewById(android.R.id.list);
+    View emptyView = view.findViewById(android.R.id.empty);
     listView.setEmptyView(emptyView);
     listView.setAdapter(adapter);
 

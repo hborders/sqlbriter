@@ -6,6 +6,7 @@ dependencies {
   implementation rootProject.ext.supportAnnotations
 
   androidTestImplementation rootProject.ext.supportTestRunner
+  androidTestImplementation rootProject.ext.androidxTestRunner
   androidTestImplementation rootProject.ext.truth
   androidTestImplementation rootProject.ext.supportSqliteFramework
 
@@ -18,7 +19,7 @@ android {
   defaultConfig {
     minSdkVersion versions.minSdk
 
-    testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
+    testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
   }
 
   compileOptions {

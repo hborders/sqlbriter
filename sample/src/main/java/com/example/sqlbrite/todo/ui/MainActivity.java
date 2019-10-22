@@ -16,13 +16,15 @@
 package com.example.sqlbrite.todo.ui;
 
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+
+import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentActivity;
 import com.example.sqlbrite.todo.R;
 
 public final class MainActivity extends FragmentActivity
     implements ListsFragment.Listener, ItemsFragment.Listener {
 
-  @Override protected void onCreate(Bundle savedInstanceState) {
+  @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     if (savedInstanceState == null) {
       getSupportFragmentManager().beginTransaction()

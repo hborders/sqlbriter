@@ -17,6 +17,9 @@ package com.example.sqlbrite.todo.db;
 
 import android.content.ContentValues;
 import android.os.Parcelable;
+
+import androidx.annotation.NonNull;
+
 import com.google.auto.value.AutoValue;
 
 // Note: normally I wouldn't prefix table classes but I didn't want 'List' to be overloaded.
@@ -29,28 +32,28 @@ public abstract class TodoList implements Parcelable {
   public static final String ARCHIVED = "archived";
 
   public abstract long id();
-  public abstract String name();
+  @NonNull public abstract String name();
   public abstract boolean archived();
 
   public static final class Builder {
-    private final ContentValues values = new ContentValues();
+    @NonNull private final ContentValues values = new ContentValues();
 
-    public Builder id(long id) {
+    @NonNull public Builder id(long id) {
       values.put(ID, id);
       return this;
     }
 
-    public Builder name(String name) {
+    @NonNull public Builder name(@NonNull String name) {
       values.put(NAME, name);
       return this;
     }
 
-    public Builder archived(boolean archived) {
+    @NonNull public Builder archived(boolean archived) {
       values.put(ARCHIVED, archived);
       return this;
     }
 
-    public ContentValues build() {
+    @NonNull public ContentValues build() {
       return values; // TODO defensive copy?
     }
   }
