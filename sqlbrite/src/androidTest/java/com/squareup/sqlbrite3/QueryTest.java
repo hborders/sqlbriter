@@ -85,7 +85,7 @@ public final class QueryTest {
       employees.blockingFirst();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Cursor returned more than 1 row");
+      assertThat(e).hasMessageThat().isEqualTo("Cursor returned more than 1 row");
     }
   }
 
@@ -118,7 +118,7 @@ public final class QueryTest {
       Query.mapToOneOrDefault(MAPPER, null);
       fail();
     } catch (NullPointerException e) {
-      assertThat(e).hasMessage("defaultValue == null");
+      assertThat(e).hasMessageThat().isEqualTo("defaultValue == null");
     }
   }
 
@@ -143,7 +143,7 @@ public final class QueryTest {
       employees.blockingFirst();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Cursor returned more than 1 row");
+      assertThat(e).hasMessageThat().isEqualTo("Cursor returned more than 1 row");
     }
   }
 
