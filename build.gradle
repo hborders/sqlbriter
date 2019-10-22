@@ -29,19 +29,17 @@ allprojects {
 
 ext {
   // Android dependencies.
-  supportV4 = 'com.android.support:support-v4:28.0.0'
-  supportAnnotations = 'com.android.support:support-annotations:28.0.0'
-  supportTestRunner = 'com.android.support.test:runner:1.0.2'
-  supportTestRules = 'com.android.support.test:rules:1.0.2'
+  supportV4 = 'androidx.legacy:legacy-support-v4:1.0.0'
+  supportAnnotations = 'androidx.annotation:annotation:1.0.0'
+  supportTestRunner = 'androidx.test.ext:junit:1.1.1'
+  supportTestRules = 'androidx.test:rules:1.2.0'
 
-  supportSqlite = 'android.arch.persistence:db:1.1.1'
-  supportSqliteFramework = 'android.arch.persistence:db-framework:1.1.1'
+  supportSqlite = 'androidx.sqlite:sqlite:2.0.0'
+  supportSqliteFramework = 'androidx.sqlite:sqlite-framework:2.0.0'
 
   // Third-party dependencies.
   dagger = 'com.google.dagger:dagger:2.13'
   daggerCompiler = 'com.google.dagger:dagger-compiler:2.13'
-  butterKnifeRuntime = 'com.jakewharton:butterknife:8.8.1'
-  butterKnifeCompiler = 'com.jakewharton:butterknife-compiler:8.8.1'
   timber = 'com.jakewharton.timber:timber:4.6.0'
   autoValue = 'com.google.auto.value:auto-value:1.5'
   autoValueParcel = 'com.ryanharter.auto.value:auto-value-parcel:0.2.5'

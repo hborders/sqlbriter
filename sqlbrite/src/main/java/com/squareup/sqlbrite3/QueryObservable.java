@@ -2,9 +2,9 @@ package com.squareup.sqlbrite3;
 
 import android.database.Cursor;
 import android.os.Build;
-import android.support.annotation.CheckResult;
-import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.CheckResult;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import com.squareup.sqlbrite3.SqlBrite.Query;
 import io.reactivex.Observable;
 import io.reactivex.Observer;

@@ -15,20 +15,20 @@
  */
 package com.squareup.sqlbrite3;
 
-import android.arch.persistence.db.SimpleSQLiteQuery;
-import android.arch.persistence.db.SupportSQLiteDatabase;
-import android.arch.persistence.db.SupportSQLiteOpenHelper;
-import android.arch.persistence.db.SupportSQLiteOpenHelper.Callback;
-import android.arch.persistence.db.SupportSQLiteQuery;
-import android.arch.persistence.db.SupportSQLiteStatement;
+import androidx.sqlite.db.SimpleSQLiteQuery;
+import androidx.sqlite.db.SupportSQLiteDatabase;
+import androidx.sqlite.db.SupportSQLiteOpenHelper;
+import androidx.sqlite.db.SupportSQLiteOpenHelper.Callback;
+import androidx.sqlite.db.SupportSQLiteQuery;
+import androidx.sqlite.db.SupportSQLiteStatement;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteTransactionListener;
-import android.support.annotation.CheckResult;
-import android.support.annotation.IntDef;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.WorkerThread;
+import androidx.annotation.CheckResult;
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 import com.squareup.sqlbrite3.SqlBrite.Logger;
 import com.squareup.sqlbrite3.SqlBrite.Query;
 import io.reactivex.Observable;

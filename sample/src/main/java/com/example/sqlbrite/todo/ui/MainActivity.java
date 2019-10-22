@@ -16,7 +16,7 @@
 package com.example.sqlbrite.todo.ui;
 
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import androidx.fragment.app.FragmentActivity;
 import com.example.sqlbrite.todo.R;
 
 public final class MainActivity extends FragmentActivity

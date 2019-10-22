@@ -18,9 +18,9 @@ package com.example.sqlbrite.todo.ui;
 import android.app.Activity;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.view.MenuItemCompat;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.core.view.MenuItemCompat;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -28,8 +28,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
 import com.example.sqlbrite.todo.R;
 import com.example.sqlbrite.todo.TodoApp;
 import com.example.sqlbrite.todo.db.Db;
@@ -48,8 +46,8 @@ import io.reactivex.schedulers.Schedulers;
 import javax.inject.Inject;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_NONE;
-import static android.support.v4.view.MenuItemCompat.SHOW_AS_ACTION_IF_ROOM;
-import static android.support.v4.view.MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT;
+import static androidx.core.view.MenuItemCompat.SHOW_AS_ACTION_IF_ROOM;
+import static androidx.core.view.MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT;
 import static com.squareup.sqlbrite3.SqlBrite.Query;
 
 public final class ItemsFragment extends Fragment {
@@ -87,9 +85,6 @@ public final class ItemsFragment extends Fragment {
   }
 
   @Inject BriteDatabase db;
-
-  @BindView(android.R.id.list) ListView listView;
-  @BindView(android.R.id.empty) View emptyView;
 
   private Listener listener;
   private ItemsAdapter adapter;
@@ -133,7 +128,8 @@ public final class ItemsFragment extends Fragment {
   @Override
   public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
-    ButterKnife.bind(this, view);
+    ListView listView = view.findViewById(android.R.id.list);
+    View emptyView = view.findViewById(android.R.id.empty);
     listView.setEmptyView(emptyView);
     listView.setAdapter(adapter);
 

@@ -15,15 +15,15 @@
  */
 package com.squareup.sqlbrite3;
 
-import android.arch.persistence.db.SupportSQLiteOpenHelper;
-import android.arch.persistence.db.SupportSQLiteOpenHelper.Configuration;
-import android.arch.persistence.db.SupportSQLiteOpenHelper.Factory;
-import android.arch.persistence.db.framework.FrameworkSQLiteOpenHelperFactory;
+import androidx.sqlite.db.SupportSQLiteOpenHelper;
+import androidx.sqlite.db.SupportSQLiteOpenHelper.Configuration;
+import androidx.sqlite.db.SupportSQLiteOpenHelper.Factory;
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory;
 import android.database.Cursor;
 import android.os.Build;
-import android.support.annotation.Nullable;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.SdkSuppress;
+import androidx.annotation.Nullable;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.filters.SdkSuppress;
 import com.squareup.sqlbrite3.SqlBrite.Query;
 import com.squareup.sqlbrite3.TestDb.Employee;
 import io.reactivex.Observable;
@@ -45,7 +45,9 @@ public final class QueryTest {
   private BriteDatabase db;
 
   @Before public void setUp() {
-    Configuration configuration = Configuration.builder(InstrumentationRegistry.getContext())
+    Configuration configuration = Configuration.builder(
+            InstrumentationRegistry.getInstrumentation().getTargetContext()
+    )
         .callback(new TestDb())
         .build();
 

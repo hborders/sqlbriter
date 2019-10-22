@@ -21,8 +21,8 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -39,7 +39,6 @@ import io.reactivex.subjects.PublishSubject;
 import javax.inject.Inject;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_NONE;
-import static butterknife.ButterKnife.findById;
 
 public final class NewListFragment extends DialogFragment {
   public static NewListFragment newInstance() {
@@ -59,7 +58,7 @@ public final class NewListFragment extends DialogFragment {
     final Context context = getActivity();
     View view = LayoutInflater.from(context).inflate(R.layout.new_list, null);
 
-    EditText name = findById(view, android.R.id.input);
+    EditText name = view.findViewById(android.R.id.input);
     Observable.combineLatest(createClicked, RxTextView.textChanges(name),
         new BiFunction<String, CharSequence, String>() {
           @Override public String apply(String ignored, CharSequence text) {

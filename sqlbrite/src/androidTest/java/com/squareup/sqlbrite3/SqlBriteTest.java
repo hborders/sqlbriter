@@ -2,8 +2,8 @@ package com.squareup.sqlbrite3;
 
 import android.database.Cursor;
 import android.database.MatrixCursor;
-import android.support.annotation.Nullable;
-import android.support.test.runner.AndroidJUnit4;
+import androidx.annotation.Nullable;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.squareup.sqlbrite3.SqlBrite.Query;
 import io.reactivex.functions.Function;
 import java.util.List;

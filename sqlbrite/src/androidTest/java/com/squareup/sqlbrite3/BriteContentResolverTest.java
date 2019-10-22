@@ -22,10 +22,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.test.rule.provider.ProviderTestRule;
-import android.support.test.runner.AndroidJUnit4;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.test.rule.provider.ProviderTestRule;
 
 import com.squareup.sqlbrite3.SqlBrite.Query;
 
@@ -49,7 +49,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 public final class BriteContentResolverTest {
 
-  @NonNull private static final Uri AUTHORITY = Objects.requireNonNull(Uri.parse("content://test_authority"));
+  @NonNull
+  private static final Uri AUTHORITY = Objects.requireNonNull(Uri.parse("content://test_authority"));
 
   @Rule
   public ProviderTestRule providerRule = new ProviderTestRule.Builder(
@@ -202,7 +203,7 @@ public final class BriteContentResolverTest {
     }
 
     @Override public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection,
-        @Nullable String[] selectionArgs) {
+                                @Nullable String[] selectionArgs) {
       for (String key : storage.keySet()) {
         if (values != null) {
           storage.put(key, values.getAsString(VALUE));
