@@ -15,6 +15,7 @@
  */
 package com.squareup.sqlbrite3;
 
+import androidx.annotation.NonNull;
 import androidx.sqlite.db.SupportSQLiteOpenHelper;
 import androidx.sqlite.db.SupportSQLiteOpenHelper.Configuration;
 import androidx.sqlite.db.SupportSQLiteOpenHelper.Factory;
@@ -27,10 +28,10 @@ import androidx.test.filters.SdkSuppress;
 import com.squareup.sqlbrite3.SqlBrite.Query;
 import com.squareup.sqlbrite3.TestDb.Employee;
 import io.reactivex.Observable;
-import io.reactivex.functions.Function;
 import io.reactivex.observers.TestObserver;
 import io.reactivex.schedulers.Schedulers;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,33 +43,37 @@ import static com.squareup.sqlbrite3.TestDb.TABLE_EMPLOYEE;
 import static org.junit.Assert.fail;
 
 public final class QueryTest {
-  private BriteDatabase db;
+  @Nullable private BriteDatabase db;
 
   @Before public void setUp() {
-    Configuration configuration = Configuration.builder(
+    @NonNull final Configuration configuration = Configuration.builder(
             InstrumentationRegistry.getInstrumentation().getTargetContext()
     )
         .callback(new TestDb())
         .build();
 
-    Factory factory = new FrameworkSQLiteOpenHelperFactory();
-    SupportSQLiteOpenHelper helper = factory.create(configuration);
+    @NonNull final Factory factory = new FrameworkSQLiteOpenHelperFactory();
+    @NonNull final SupportSQLiteOpenHelper helper = factory.create(configuration);
 
-    SqlBrite sqlBrite = new SqlBrite.Builder().build();
+    @NonNull final SqlBrite sqlBrite = new SqlBrite.Builder().build();
     db = sqlBrite.wrapDatabaseHelper(helper, Schedulers.trampoline());
   }
 
   @Test public void mapToOne() {
-    Employee employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final Employee employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
         .lift(Query.mapToOne(MAPPER))
         .blockingFirst();
     assertThat(employees).isEqualTo(new Employee("alice", "Alice Allison"));
   }
 
   @Test public void mapToOneThrowsWhenMapperReturnsNull() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
-        .lift(Query.mapToOne(new Function<Cursor, Employee>() {
-          @Override public Employee apply(Cursor cursor) throws Exception {
+        .lift(Query.mapToOne(new FunctionRR<Cursor, Employee>() {
+          @NonNull @Override public Employee applyRR(@NonNull Cursor cursor) throws Exception {
             return null;
           }
         }))
@@ -78,10 +83,13 @@ public final class QueryTest {
   }
 
   @Test public void mapToOneThrowsOnMultipleRows() {
-    Observable<Employee> employees =
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final Observable<Employee> employees =
         db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 2") //
             .lift(Query.mapToOne(MAPPER));
     try {
+      //noinspection ResultOfMethodCallIgnored
       employees.blockingFirst();
       fail();
     } catch (IllegalStateException e) {
@@ -90,13 +98,13 @@ public final class QueryTest {
   }
 
   @Test public void mapToOneIgnoresNullCursor() {
-    Query nully = new Query() {
+    @NonNull final Query nully = new Query() {
       @Nullable @Override public Cursor run() {
         return null;
       }
     };
 
-    TestObserver<Employee> observer = new TestObserver<>();
+    @NonNull final TestObserver<Employee> observer = new TestObserver<>();
     Observable.just(nully)
         .lift(Query.mapToOne(MAPPER))
         .subscribe(observer);
@@ -106,7 +114,9 @@ public final class QueryTest {
   }
 
   @Test public void mapToOneOrDefault() {
-    Employee employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final Employee employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
         .lift(Query.mapToOneOrDefault(
             MAPPER, new Employee("fred", "Fred Frederson")))
         .blockingFirst();
@@ -115,6 +125,7 @@ public final class QueryTest {
 
   @Test public void mapToOneOrDefaultDisallowsNullDefault() {
     try {
+      //noinspection ConstantConditions
       Query.mapToOneOrDefault(MAPPER, null);
       fail();
     } catch (NullPointerException e) {
@@ -123,9 +134,11 @@ public final class QueryTest {
   }
 
   @Test public void mapToOneOrDefaultThrowsWhenMapperReturnsNull() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
-        .lift(Query.mapToOneOrDefault(new Function<Cursor, Employee>() {
-          @Override public Employee apply(Cursor cursor) throws Exception {
+        .lift(Query.mapToOneOrDefault(new FunctionRR<Cursor, Employee>() {
+          @NonNull @Override public Employee applyRR(@NonNull Cursor cursor) throws Exception {
             return null;
           }
         }, new Employee("fred", "Fred Frederson")))
@@ -135,11 +148,14 @@ public final class QueryTest {
   }
 
   @Test public void mapToOneOrDefaultThrowsOnMultipleRows() {
-    Observable<Employee> employees =
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final Observable<Employee> employees =
         db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 2") //
             .lift(Query.mapToOneOrDefault(
                 MAPPER, new Employee("fred", "Fred Frederson")));
     try {
+      //noinspection ResultOfMethodCallIgnored
       employees.blockingFirst();
       fail();
     } catch (IllegalStateException e) {
@@ -148,14 +164,14 @@ public final class QueryTest {
   }
 
   @Test public void mapToOneOrDefaultReturnsDefaultWhenNullCursor() {
-    Employee defaultEmployee = new Employee("bob", "Bob Bobberson");
-    Query nully = new Query() {
+    @NonNull final Employee defaultEmployee = new Employee("bob", "Bob Bobberson");
+    @NonNull final Query nully = new Query() {
       @Nullable @Override public Cursor run() {
         return null;
       }
     };
 
-    TestObserver<Employee> observer = new TestObserver<>();
+    @NonNull final TestObserver<Employee> observer = new TestObserver<>();
     Observable.just(nully)
         .lift(Query.mapToOneOrDefault(MAPPER, defaultEmployee))
         .subscribe(observer);
@@ -165,7 +181,9 @@ public final class QueryTest {
   }
 
   @Test public void mapToList() {
-    List<Employee> employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final List<Employee> employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
         .lift(Query.mapToList(MAPPER))
         .blockingFirst();
     assertThat(employees).containsExactly( //
@@ -175,38 +193,44 @@ public final class QueryTest {
   }
 
   @Test public void mapToListEmptyWhenNoRows() {
-    List<Employee> employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " WHERE 1=2")
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final List<Employee> employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " WHERE 1=2")
         .lift(Query.mapToList(MAPPER))
         .blockingFirst();
     assertThat(employees).isEmpty();
   }
 
-  @Test public void mapToListReturnsNullOnMapperNull() {
-    Function<Cursor, Employee> mapToNull = new Function<Cursor, Employee>() {
+  @Test public void mapToListThrowsWhenMapperReturnsNull() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final FunctionRR<Cursor, Employee> mapToNull = new FunctionRR<Cursor, Employee>() {
       private int count;
 
-      @Override public Employee apply(Cursor cursor) throws Exception {
-        return count++ == 2 ? null : MAPPER.apply(cursor);
+      @NonNull @Override public Employee applyRR(@NonNull Cursor cursor) throws Exception {
+        return null;
       }
     };
-    List<Employee> employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES) //
-            .lift(Query.mapToList(mapToNull)) //
-            .blockingFirst();
 
-    assertThat(employees).containsExactly(
-        new Employee("alice", "Alice Allison"),
-        new Employee("bob", "Bob Bobberson"),
-        null);
+    try {
+      //noinspection ResultOfMethodCallIgnored
+      db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES) //
+              .lift(Query.mapToList(mapToNull)) //
+              .blockingFirst();
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessageThat().isEqualTo("QueryToList mapper returned null");
+    }
   }
 
   @Test public void mapToListIgnoresNullCursor() {
-    Query nully = new Query() {
+    @NonNull final Query nully = new Query() {
       @Nullable @Override public Cursor run() {
         return null;
       }
     };
 
-    TestObserver<List<Employee>> subscriber = new TestObserver<>();
+    @NonNull final TestObserver<List<Employee>> subscriber = new TestObserver<>();
     Observable.just(nully)
         .lift(Query.mapToList(MAPPER))
         .subscribe(subscriber);
@@ -217,6 +241,8 @@ public final class QueryTest {
 
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.N)
   @Test public void mapToOptional() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
         .lift(Query.mapToOptional(MAPPER))
         .test()
@@ -225,9 +251,11 @@ public final class QueryTest {
 
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.N)
   @Test public void mapToOptionalThrowsWhenMapperReturnsNull() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
-        .lift(Query.mapToOptional(new Function<Cursor, Employee>() {
-          @Override public Employee apply(Cursor cursor) throws Exception {
+        .lift(Query.mapToOptional(new FunctionRR<Cursor, Employee>() {
+          @NonNull @Override public Employee applyRR(@NonNull Cursor cursor) throws Exception {
             return null;
           }
         }))
@@ -238,6 +266,8 @@ public final class QueryTest {
 
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.N)
   @Test public void mapToOptionalThrowsOnMultipleRows() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 2") //
         .lift(Query.mapToOptional(MAPPER))
         .test()
@@ -247,7 +277,7 @@ public final class QueryTest {
 
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.N)
   @Test public void mapToOptionalIgnoresNullCursor() {
-    Query nully = new Query() {
+    @NonNull final Query nully = new Query() {
       @Nullable @Override public Cursor run() {
         return null;
       }

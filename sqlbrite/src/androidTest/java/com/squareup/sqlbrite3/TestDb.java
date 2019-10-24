@@ -15,6 +15,7 @@
  */
 package com.squareup.sqlbrite3;
 
+import androidx.annotation.Nullable;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.sqlite.db.SupportSQLiteOpenHelper;
 import android.content.ContentValues;
@@ -32,40 +33,40 @@ import static com.squareup.sqlbrite3.TestDb.ManagerTable.EMPLOYEE_ID;
 import static com.squareup.sqlbrite3.TestDb.ManagerTable.MANAGER_ID;
 
 final class TestDb extends SupportSQLiteOpenHelper.Callback {
-  static final String TABLE_EMPLOYEE = "employee";
-  static final String TABLE_MANAGER = "manager";
+  @NonNull static final String TABLE_EMPLOYEE = "employee";
+  @NonNull static final String TABLE_MANAGER = "manager";
 
-  static final String SELECT_EMPLOYEES =
+  @NonNull static final String SELECT_EMPLOYEES =
       "SELECT " + USERNAME + ", " + NAME + " FROM " + TABLE_EMPLOYEE;
-  static final String SELECT_MANAGER_LIST = ""
+  @NonNull static final String SELECT_MANAGER_LIST = ""
       + "SELECT e." + NAME + ", m." + NAME + " "
       + "FROM " + TABLE_MANAGER + " AS manager "
       + "JOIN " + TABLE_EMPLOYEE + " AS e "
       + "ON manager." + EMPLOYEE_ID + " = e." + ID + " "
       + "JOIN " + TABLE_EMPLOYEE + " as m "
       + "ON manager." + MANAGER_ID + " = m." + ID;
-  static final Collection<String> BOTH_TABLES =
+  @NonNull static final Collection<String> BOTH_TABLES =
       Arrays.asList(TABLE_EMPLOYEE, TABLE_MANAGER);
 
   interface EmployeeTable {
-    String ID = "_id";
-    String USERNAME = "username";
-    String NAME = "name";
+    @NonNull String ID = "_id";
+    @NonNull String USERNAME = "username";
+    @NonNull String NAME = "name";
   }
 
   static final class Employee {
-    static final Function<Cursor, Employee> MAPPER = new Function<Cursor, Employee>() {
-      @Override public Employee apply(Cursor cursor) {
+    @NonNull static final FunctionRR<Cursor, Employee> MAPPER = new FunctionRR<Cursor, Employee>() {
+      @NonNull @Override public Employee applyRR(@NonNull Cursor cursor) {
         return new Employee( //
             cursor.getString(cursor.getColumnIndexOrThrow(EmployeeTable.USERNAME)),
             cursor.getString(cursor.getColumnIndexOrThrow(EmployeeTable.NAME)));
       }
     };
 
-    final String username;
-    final String name;
+    @Nullable final String username;
+    @Nullable final String name;
 
-    Employee(String username, String name) {
+    Employee(@Nullable String username, @Nullable String name) {
       this.username = username;
       this.name = name;
     }
@@ -73,12 +74,13 @@ final class TestDb extends SupportSQLiteOpenHelper.Callback {
     @Override public boolean equals(Object o) {
       if (o == this) return true;
       if (!(o instanceof Employee)) return false;
-      Employee other = (Employee) o;
-      return username.equals(other.username) && name.equals(other.name);
+      @NonNull final Employee other = (Employee) o;
+      return ((username != null && username.equals(other.username)) || (username == null && other.username == null)) &&
+              ((name != null && name.equals(other.name)) || (name == null && other.name == null));
     }
 
     @Override public int hashCode() {
-      return username.hashCode() * 17 + name.hashCode();
+      return (username == null ? 0 : username.hashCode()) * 17 + (name == null ? 0 : name.hashCode());
     }
 
     @Override public String toString() {
@@ -87,16 +89,16 @@ final class TestDb extends SupportSQLiteOpenHelper.Callback {
   }
 
   interface ManagerTable {
-    String ID = "_id";
-    String EMPLOYEE_ID = "employee_id";
-    String MANAGER_ID = "manager_id";
+    @NonNull String ID = "_id";
+    @NonNull String EMPLOYEE_ID = "employee_id";
+    @NonNull String MANAGER_ID = "manager_id";
   }
 
-  private static final String CREATE_EMPLOYEE = "CREATE TABLE " + TABLE_EMPLOYEE + " ("
+  @NonNull private static final String CREATE_EMPLOYEE = "CREATE TABLE " + TABLE_EMPLOYEE + " ("
       + EmployeeTable.ID + " INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "
       + EmployeeTable.USERNAME + " TEXT NOT NULL UNIQUE, "
       + EmployeeTable.NAME + " TEXT NOT NULL)";
-  private static final String CREATE_MANAGER = "CREATE TABLE " + TABLE_MANAGER + " ("
+  @NonNull private static final String CREATE_MANAGER = "CREATE TABLE " + TABLE_MANAGER + " ("
       + ManagerTable.ID + " INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "
       + ManagerTable.EMPLOYEE_ID + " INTEGER NOT NULL UNIQUE REFERENCES " + TABLE_EMPLOYEE + "(" + EmployeeTable.ID + "), "
       + ManagerTable.MANAGER_ID + " INTEGER NOT NULL REFERENCES " + TABLE_EMPLOYEE + "(" + EmployeeTable.ID + "))";
@@ -121,15 +123,15 @@ final class TestDb extends SupportSQLiteOpenHelper.Callback {
     db.insert(TABLE_MANAGER, CONFLICT_FAIL, manager(eveId, aliceId));
   }
 
-  static ContentValues employee(String username, String name) {
-    ContentValues values = new ContentValues();
+  @NonNull static ContentValues employee(@NonNull String username, @NonNull String name) {
+    @NonNull final ContentValues values = new ContentValues();
     values.put(EmployeeTable.USERNAME, username);
     values.put(EmployeeTable.NAME, name);
     return values;
   }
 
-  static ContentValues manager(long employeeId, long managerId) {
-    ContentValues values = new ContentValues();
+  @NonNull static ContentValues manager(long employeeId, long managerId) {
+    @NonNull final ContentValues values = new ContentValues();
     values.put(ManagerTable.EMPLOYEE_ID, employeeId);
     values.put(ManagerTable.MANAGER_ID, managerId);
     return values;

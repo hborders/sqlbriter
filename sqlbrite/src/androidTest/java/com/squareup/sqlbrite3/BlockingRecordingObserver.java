@@ -15,13 +15,16 @@
  */
 package com.squareup.sqlbrite3;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 final class BlockingRecordingObserver extends RecordingObserver {
-  protected Object takeEvent() {
+  @NonNull @Override protected Object takeEvent() {
     try {
-      Object item = events.pollFirst(1, SECONDS);
+      @Nullable final Object item = events.pollFirst(1, SECONDS);
       if (item == null) {
         throw new AssertionError("No items.");
       }

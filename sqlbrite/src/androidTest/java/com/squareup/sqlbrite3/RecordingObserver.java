@@ -17,6 +17,10 @@ package com.squareup.sqlbrite3;
 
 import android.database.Cursor;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import io.reactivex.observers.DisposableObserver;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -26,28 +30,28 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.squareup.sqlbrite3.SqlBrite.Query;
 
 class RecordingObserver extends DisposableObserver<Query> {
-  private static final Object COMPLETED = "<completed>";
-  private static final String TAG = RecordingObserver.class.getSimpleName();
+  @NonNull private static final Object COMPLETED = "<completed>";
+  @NonNull private static final String TAG = RecordingObserver.class.getSimpleName();
 
-  final BlockingDeque<Object> events = new LinkedBlockingDeque<>();
+  @NonNull final BlockingDeque<Object> events = new LinkedBlockingDeque<>();
 
   @Override public final void onComplete() {
     Log.d(TAG, "onCompleted");
     events.add(COMPLETED);
   }
 
-  @Override public final void onError(Throwable e) {
+  @Override public final void onError(@NonNull Throwable e) {
     Log.d(TAG, "onError " + e.getClass().getSimpleName() + " " + e.getMessage());
     events.add(e);
   }
 
-  @Override public final void onNext(Query value) {
+  @Override public final void onNext(@NonNull Query value) {
     Log.d(TAG, "onNext " + value);
     events.add(value.run());
   }
 
-  protected Object takeEvent() {
-    Object item = events.removeFirst();
+  @NonNull protected Object takeEvent() {
+    @Nullable final Object item = events.removeFirst();
     if (item == null) {
       throw new AssertionError("No items.");
     }
@@ -55,19 +59,19 @@ class RecordingObserver extends DisposableObserver<Query> {
   }
 
   public final CursorAssert assertCursor() {
-    Object event = takeEvent();
+    @NonNull final Object event = takeEvent();
     assertThat(event).isInstanceOf(Cursor.class);
     return new CursorAssert((Cursor) event);
   }
 
   public final void assertErrorContains(String expected) {
-    Object event = takeEvent();
+    @NonNull final Object event = takeEvent();
     assertThat(event).isInstanceOf(Throwable.class);
     assertThat(((Throwable) event).getMessage()).contains(expected);
   }
 
   public final void assertIsCompleted() {
-    Object event = takeEvent();
+    @NonNull final Object event = takeEvent();
     assertThat(event).isEqualTo(COMPLETED);
   }
 
@@ -76,14 +80,15 @@ class RecordingObserver extends DisposableObserver<Query> {
   }
 
   static final class CursorAssert {
-    private final Cursor cursor;
+    @NonNull private final Cursor cursor;
     private int row = 0;
 
-    CursorAssert(Cursor cursor) {
+    CursorAssert(@NonNull Cursor cursor) {
       this.cursor = cursor;
     }
 
-    public CursorAssert hasRow(Object... values) {
+    @NonNull
+    public CursorAssert hasRow(@NonNull Object... values) {
       assertWithMessage("row " + (row + 1) + " exists")
           .that(cursor.moveToNext()).isTrue();
       row += 1;
@@ -99,7 +104,7 @@ class RecordingObserver extends DisposableObserver<Query> {
 
     public void isExhausted() {
       if (cursor.moveToNext()) {
-        StringBuilder data = new StringBuilder();
+        @NonNull final StringBuilder data = new StringBuilder();
         for (int i = 0; i < cursor.getColumnCount(); i++) {
           if (i > 0) data.append(", ");
           data.append(cursor.getString(i));

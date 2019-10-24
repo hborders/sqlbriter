@@ -17,32 +17,35 @@ package com.squareup.sqlbrite3;
 
 import android.database.Cursor;
 import android.os.Build;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import io.reactivex.ObservableOperator;
 import io.reactivex.Observer;
 import io.reactivex.exceptions.Exceptions;
-import io.reactivex.functions.Function;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.plugins.RxJavaPlugins;
 import java.util.Optional;
 
 @RequiresApi(Build.VERSION_CODES.N)
 final class QueryToOptionalOperator<T> implements ObservableOperator<Optional<T>, SqlBrite.Query> {
-  private final Function<Cursor, T> mapper;
+  @NonNull private final FunctionRR<Cursor, T> mapper;
 
-  QueryToOptionalOperator(Function<Cursor, T> mapper) {
+  QueryToOptionalOperator(@NonNull FunctionRR<Cursor, T> mapper) {
     this.mapper = mapper;
   }
 
-  @Override public Observer<? super SqlBrite.Query> apply(Observer<? super Optional<T>> observer) {
+  @NonNull @Override
+  public Observer<? super SqlBrite.Query> apply(@NonNull Observer<? super Optional<T>> observer) {
     return new MappingObserver<>(observer, mapper);
   }
 
   static final class MappingObserver<T> extends DisposableObserver<SqlBrite.Query> {
-    private final Observer<? super Optional<T>> downstream;
-    private final Function<Cursor, T> mapper;
+    @NonNull private final Observer<? super Optional<T>> downstream;
+    @NonNull private final FunctionRR<Cursor, T> mapper;
 
-    MappingObserver(Observer<? super Optional<T>> downstream, Function<Cursor, T> mapper) {
+    MappingObserver(@NonNull Observer<? super Optional<T>> downstream, @NonNull FunctionRR<Cursor, T> mapper) {
       this.downstream = downstream;
       this.mapper = mapper;
     }
@@ -51,14 +54,17 @@ final class QueryToOptionalOperator<T> implements ObservableOperator<Optional<T>
       downstream.onSubscribe(this);
     }
 
-    @Override public void onNext(SqlBrite.Query query) {
+    @Override public void onNext(@NonNull SqlBrite.Query query) {
       try {
-        T item = null;
-        Cursor cursor = query.run();
+        @Nullable final T item;
+        @Nullable final Cursor cursor = query.run();
         if (cursor != null) {
           try {
             if (cursor.moveToNext()) {
-              item = mapper.apply(cursor);
+              item = mapper.applyRR(cursor);
+              // even though the type system should make this impossible,
+              // Java doesn't always check nullability annotations,
+              // so leave this in just in case our clients don't follow the rules.
               if (item == null) {
                 downstream.onError(new NullPointerException("QueryToOne mapper returned null"));
                 return;
@@ -66,10 +72,14 @@ final class QueryToOptionalOperator<T> implements ObservableOperator<Optional<T>
               if (cursor.moveToNext()) {
                 throw new IllegalStateException("Cursor returned more than 1 row");
               }
+            } else {
+              item = null;
             }
           } finally {
             cursor.close();
           }
+        } else {
+          item = null;
         }
         if (!isDisposed()) {
           downstream.onNext(Optional.ofNullable(item));
@@ -86,7 +96,7 @@ final class QueryToOptionalOperator<T> implements ObservableOperator<Optional<T>
       }
     }
 
-    @Override public void onError(Throwable e) {
+    @Override public void onError(@NonNull Throwable e) {
       if (isDisposed()) {
         RxJavaPlugins.onError(e);
       } else {

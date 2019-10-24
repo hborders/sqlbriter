@@ -81,7 +81,6 @@ public final class BriteContentResolverTest
         };
     db = new BriteContentResolver(this.contentResolver, logger, scheduler, queryTransformer);
 
-
     @NonNull final ContentResolver applicationContextContentResolver =
         Objects.requireNonNull(ApplicationProvider.getApplicationContext().getContentResolver());
 

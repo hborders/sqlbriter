@@ -21,7 +21,7 @@ import io.reactivex.disposables.Disposable;
 import java.util.concurrent.TimeUnit;
 
 final class TestScheduler extends Scheduler {
-  private final io.reactivex.schedulers.TestScheduler delegate =
+  @NonNull private final io.reactivex.schedulers.TestScheduler delegate =
       new io.reactivex.schedulers.TestScheduler();
 
   private boolean runTasksImmediately = true;
@@ -34,16 +34,16 @@ final class TestScheduler extends Scheduler {
     delegate.triggerActions();
   }
 
-  @Override public Worker createWorker() {
+  @NonNull @Override public Worker createWorker() {
     return new TestWorker();
   }
 
   class TestWorker extends Worker {
-    private final Worker delegateWorker = delegate.createWorker();
+    @NonNull private final Worker delegateWorker = delegate.createWorker();
 
-    @Override
+    @NonNull @Override
     public Disposable schedule(@NonNull Runnable run, long delay, @NonNull TimeUnit unit) {
-      Disposable disposable = delegateWorker.schedule(run, delay, unit);
+      @NonNull final Disposable disposable = delegateWorker.schedule(run, delay, unit);
       if (runTasksImmediately) {
         triggerActions();
       }

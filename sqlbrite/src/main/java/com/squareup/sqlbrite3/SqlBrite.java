@@ -33,6 +33,7 @@ import io.reactivex.ObservableTransformer;
 import io.reactivex.Scheduler;
 import io.reactivex.functions.Function;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -40,44 +41,44 @@ import java.util.Optional;
  * observing the result of a query.
  */
 public final class SqlBrite {
-  static final Logger DEFAULT_LOGGER = new Logger() {
-    @Override public void log(String message) {
+  @NonNull static final Logger DEFAULT_LOGGER = new Logger() {
+    @Override public void log(@NonNull String message) {
       Log.d("SqlBrite", message);
     }
   };
-  static final ObservableTransformer<Query, Query> DEFAULT_TRANSFORMER =
+  @NonNull static final ObservableTransformer<Query, Query> DEFAULT_TRANSFORMER =
       new ObservableTransformer<Query, Query>() {
-        @Override public Observable<Query> apply(Observable<Query> queryObservable) {
+        @NonNull @Override public Observable<Query> apply(@NonNull Observable<Query> queryObservable) {
           return queryObservable;
         }
       };
 
   public static final class Builder {
-    private Logger logger = DEFAULT_LOGGER;
-    private ObservableTransformer<Query, Query> queryTransformer = DEFAULT_TRANSFORMER;
+    @NonNull private Logger logger = DEFAULT_LOGGER;
+    @NonNull private ObservableTransformer<Query, Query> queryTransformer = DEFAULT_TRANSFORMER;
 
-    @CheckResult
+    @CheckResult @NonNull
     public Builder logger(@NonNull Logger logger) {
       if (logger == null) throw new NullPointerException("logger == null");
       this.logger = logger;
       return this;
     }
 
-    @CheckResult
+    @CheckResult @NonNull
     public Builder queryTransformer(@NonNull ObservableTransformer<Query, Query> queryTransformer) {
       if (queryTransformer == null) throw new NullPointerException("queryTransformer == null");
       this.queryTransformer = queryTransformer;
       return this;
     }
 
-    @CheckResult
+    @CheckResult @NonNull
     public SqlBrite build() {
       return new SqlBrite(logger, queryTransformer);
     }
   }
 
-  final Logger logger;
-  final ObservableTransformer<Query, Query> queryTransformer;
+  @NonNull final Logger logger;
+  @NonNull final ObservableTransformer<Query, Query> queryTransformer;
 
   SqlBrite(@NonNull Logger logger, @NonNull ObservableTransformer<Query, Query> queryTransformer) {
     this.logger = logger;
@@ -127,7 +128,7 @@ public final class SqlBrite {
      * @param mapper Maps the current {@link Cursor} row to {@code T}. May not return null.
      */
     @CheckResult @NonNull //
-    public static <T> ObservableOperator<T, Query> mapToOne(@NonNull Function<Cursor, T> mapper) {
+    public static <T> ObservableOperator<T, Query> mapToOne(@NonNull FunctionRR<Cursor, T> mapper) {
       return new QueryToOneOperator<>(mapper, null);
     }
 
@@ -147,7 +148,7 @@ public final class SqlBrite {
     @SuppressWarnings("ConstantConditions") // Public API contract.
     @CheckResult @NonNull
     public static <T> ObservableOperator<T, Query> mapToOneOrDefault(
-        @NonNull Function<Cursor, T> mapper, @NonNull T defaultValue) {
+        @NonNull FunctionRR<Cursor, T> mapper, @NonNull T defaultValue) {
       if (defaultValue == null) throw new NullPointerException("defaultValue == null");
       return new QueryToOneOperator<>(mapper, defaultValue);
     }
@@ -167,7 +168,7 @@ public final class SqlBrite {
     @RequiresApi(Build.VERSION_CODES.N) //
     @CheckResult @NonNull //
     public static <T> ObservableOperator<Optional<T>, Query> mapToOptional(
-        @NonNull Function<Cursor, T> mapper) {
+        @NonNull FunctionRR<Cursor, T> mapper) {
       return new QueryToOptionalOperator<>(mapper);
     }
 
@@ -185,7 +186,7 @@ public final class SqlBrite {
      */
     @CheckResult @NonNull
     public static <T> ObservableOperator<List<T>, Query> mapToList(
-        @NonNull Function<Cursor, T> mapper) {
+        @NonNull FunctionRR<Cursor, T> mapper) {
       return new QueryToListOperator<>(mapper);
     }
 
@@ -225,14 +226,14 @@ public final class SqlBrite {
      * The resulting observable will be empty if {@code null} is returned from {@link #run()}.
      */
     @CheckResult @NonNull
-    public final <T> Observable<T> asRows(final Function<Cursor, T> mapper) {
+    public final <T> Observable<T> asRows(@NonNull final FunctionRR<Cursor, T> mapper) {
       return Observable.create(new ObservableOnSubscribe<T>() {
-        @Override public void subscribe(ObservableEmitter<T> e) throws Exception {
-          Cursor cursor = run();
+        @Override public void subscribe(@NonNull ObservableEmitter<T> e) throws Exception {
+          @Nullable final Cursor cursor = run();
           if (cursor != null) {
             try {
               while (cursor.moveToNext() && !e.isDisposed()) {
-                e.onNext(mapper.apply(cursor));
+                e.onNext(Objects.requireNonNull(mapper.applyRR(cursor)));
               }
             } finally {
               cursor.close();
@@ -248,6 +249,6 @@ public final class SqlBrite {
 
   /** A simple indirection for logging debug messages. */
   public interface Logger {
-    void log(String message);
+    void log(@NonNull String message);
   }
 }

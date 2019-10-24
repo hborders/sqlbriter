@@ -24,6 +24,7 @@ import androidx.annotation.NonNull;
 import com.google.auto.value.AutoValue;
 
 import java.util.Objects;
+import com.squareup.sqlbrite3.FunctionRR;
 
 import io.reactivex.functions.Function;
 
@@ -41,8 +42,8 @@ public abstract class TodoItem implements Parcelable {
   @NonNull public abstract String description();
   public abstract boolean complete();
 
-  public static final Function<Cursor, TodoItem> MAPPER = new Function<Cursor, TodoItem>() {
-    @Override public TodoItem apply(Cursor cursor) {
+  public static final FunctionRR<Cursor, TodoItem> MAPPER = new FunctionRR<Cursor, TodoItem>() {
+    @NonNull @Override public TodoItem applyRR(@NonNull Cursor cursor) {
       long id = Db.getLong(cursor, ID);
       long listId = Db.getLong(cursor, LIST_ID);
       @NonNull String description = Objects.requireNonNull(Db.getString(cursor, DESCRIPTION));

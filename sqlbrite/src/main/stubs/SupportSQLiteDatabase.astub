@@ -1,0 +1,19 @@
+package androidx.sqlite.db;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+interface SupportSQLiteDatabase extends Closeable {
+  int delete(
+    @NonNull String table,
+    @Nullable String whereClause,
+    @Nullable Object @Nullable[] whereArgs
+  );
+  int update(
+    @NonNull String table,
+    int conflictAlgorithm,
+    @NonNull ContentValues values,
+    @Nullable String whereClause,
+    @Nullable Object @Nullable [] whereArgs
+  );
+}

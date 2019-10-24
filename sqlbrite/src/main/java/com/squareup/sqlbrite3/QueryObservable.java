@@ -14,20 +14,21 @@ import java.util.Optional;
 
 /** An {@link Observable} of {@link Query} which offers query-specific convenience operators. */
 public final class QueryObservable extends Observable<Query> {
-  static final Function<Observable<Query>, QueryObservable> QUERY_OBSERVABLE =
+  /** This can't be a {@link FunctionRR} because it has to interact directly with RxJava */
+  @NonNull static final Function<Observable<Query>, QueryObservable> QUERY_OBSERVABLE =
       new Function<Observable<Query>, QueryObservable>() {
-        @Override public QueryObservable apply(Observable<Query> queryObservable) {
+        @NonNull @Override public QueryObservable apply(@NonNull Observable<Query> queryObservable) {
           return new QueryObservable(queryObservable);
         }
       };
 
-  private final Observable<Query> upstream;
+  @NonNull private final Observable<Query> upstream;
 
-  public QueryObservable(Observable<Query> upstream) {
+  public QueryObservable(@NonNull Observable<Query> upstream) {
     this.upstream = upstream;
   }
 
-  @Override protected void subscribeActual(Observer<? super Query> observer) {
+  @Override protected void subscribeActual(@NonNull Observer<? super Query> observer) {
     upstream.subscribe(observer);
   }
 
@@ -51,7 +52,7 @@ public final class QueryObservable extends Observable<Query> {
    * @param mapper Maps the current {@link Cursor} row to {@code T}. May not return null.
    */
   @CheckResult @NonNull
-  public final <T> Observable<T> mapToOne(@NonNull Function<Cursor, T> mapper) {
+  public final <T> Observable<T> mapToOne(@NonNull FunctionRR<Cursor, T> mapper) {
     return lift(Query.mapToOne(mapper));
   }
 
@@ -76,7 +77,7 @@ public final class QueryObservable extends Observable<Query> {
    * @param defaultValue Value returned if result set is empty
    */
   @CheckResult @NonNull
-  public final <T> Observable<T> mapToOneOrDefault(@NonNull Function<Cursor, T> mapper,
+  public final <T> Observable<T> mapToOneOrDefault(@NonNull FunctionRR<Cursor, T> mapper,
       @NonNull T defaultValue) {
     return lift(Query.mapToOneOrDefault(mapper, defaultValue));
   }
@@ -102,7 +103,7 @@ public final class QueryObservable extends Observable<Query> {
    */
   @RequiresApi(Build.VERSION_CODES.N)
   @CheckResult @NonNull
-  public final <T> Observable<Optional<T>> mapToOptional(@NonNull Function<Cursor, T> mapper) {
+  public final <T> Observable<Optional<T>> mapToOptional(@NonNull FunctionRR<Cursor, T> mapper) {
     return lift(Query.mapToOptional(mapper));
   }
 
@@ -128,7 +129,7 @@ public final class QueryObservable extends Observable<Query> {
    * @param mapper Maps the current {@link Cursor} row to {@code T}. May not return null.
    */
   @CheckResult @NonNull
-  public final <T> Observable<List<T>> mapToList(@NonNull Function<Cursor, T> mapper) {
+  public final <T> Observable<List<T>> mapToList(@NonNull FunctionRR<Cursor, T> mapper) {
     return lift(Query.mapToList(mapper));
   }
 }

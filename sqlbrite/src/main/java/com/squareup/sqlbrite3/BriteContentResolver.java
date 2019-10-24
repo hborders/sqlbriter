@@ -43,17 +43,19 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
  * the result of a query. Create using a {@link SqlBrite} instance.
  */
 public final class BriteContentResolver {
-  final Handler contentObserverHandler = new Handler(Looper.getMainLooper());
+  @NonNull final Handler contentObserverHandler = new Handler(Looper.getMainLooper());
 
-  final ContentResolver contentResolver;
-  private final Logger logger;
-  private final Scheduler scheduler;
-  private final ObservableTransformer<Query, Query> queryTransformer;
+  @NonNull final ContentResolver contentResolver;
+  @NonNull private final Logger logger;
+  @NonNull private final Scheduler scheduler;
+  @NonNull private final ObservableTransformer<Query, Query> queryTransformer;
 
   volatile boolean logging;
 
-  BriteContentResolver(ContentResolver contentResolver, Logger logger, Scheduler scheduler,
-      ObservableTransformer<Query, Query> queryTransformer) {
+  BriteContentResolver(@NonNull ContentResolver contentResolver,
+                       @NonNull Logger logger,
+                       @NonNull Scheduler scheduler,
+                       @NonNull ObservableTransformer<Query, Query> queryTransformer) {
     this.contentResolver = contentResolver;
     this.logger = logger;
     this.scheduler = scheduler;
@@ -89,28 +91,29 @@ public final class BriteContentResolver {
    * @see ContentResolver#registerContentObserver(Uri, boolean, ContentObserver)
    */
   @CheckResult @NonNull
-  public QueryObservable createQuery(@NonNull final Uri uri, @Nullable final String[] projection,
-      @Nullable final String selection, @Nullable final String[] selectionArgs, @Nullable
-      final String sortOrder, final boolean notifyForDescendents) {
-    final Query query = new Query() {
-      @Override public Cursor run() {
-        long startNanos = nanoTime();
-        Cursor cursor = contentResolver.query(uri, projection, selection, selectionArgs, sortOrder);
+  public QueryObservable createQuery(@NonNull final Uri uri, @Nullable final String [] projection,
+      @Nullable final String selection, @Nullable final String[] selectionArgs,
+      @Nullable final String sortOrder, final boolean notifyForDescendents) {
+    @NonNull final Query query = new Query() {
+      @Nullable @Override public Cursor run() {
+        final long startNanos = nanoTime();
+        @Nullable final Cursor cursor = contentResolver.query(uri, projection, selection,
+                                                              selectionArgs, sortOrder);
 
         if (logging) {
-          long tookMillis = NANOSECONDS.toMillis(nanoTime() - startNanos);
+          final long tookMillis = NANOSECONDS.toMillis(nanoTime() - startNanos);
           log("QUERY (%sms)\n  uri: %s\n  projection: %s\n  selection: %s\n  selectionArgs: %s\n  "
                   + "sortOrder: %s\n  notifyForDescendents: %s", tookMillis, uri,
-              Arrays.toString(projection), selection, Arrays.toString(selectionArgs), sortOrder,
-              notifyForDescendents);
+              Arrays.toString(projection), String.valueOf(selection), Arrays.toString(selectionArgs),
+              String.valueOf(sortOrder), notifyForDescendents);
         }
 
         return cursor;
       }
     };
-    Observable<Query> queries = Observable.create(new ObservableOnSubscribe<Query>() {
-      @Override public void subscribe(final ObservableEmitter<Query> e) throws Exception {
-        final ContentObserver observer = new ContentObserver(contentObserverHandler) {
+    @NonNull final Observable<Query> queries = Observable.create(new ObservableOnSubscribe<Query>() {
+      @Override public void subscribe(@NonNull final ObservableEmitter<Query> e) throws Exception {
+        @NonNull final ContentObserver observer = new ContentObserver(contentObserverHandler) {
           @Override public void onChange(boolean selfChange) {
             if (!e.isDisposed()) {
               e.onNext(query);
@@ -135,8 +138,12 @@ public final class BriteContentResolver {
         .to(QUERY_OBSERVABLE);
   }
 
-  void log(String message, Object... args) {
-    if (args.length > 0) message = String.format(message, args);
-    logger.log(message);
+  // Package-private to avoid synthetic accessor method for 'Query' instance in #createQuery
+  void log(@NonNull String message, @NonNull Object... args) {
+    if (args.length == 0) {
+      logger.log(message);
+    } else {
+      logger.log(String.format(message, args));
+    }
   }
 }
