@@ -18,6 +18,7 @@ package com.squareup.sqlbrite3;
 import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
@@ -178,26 +179,21 @@ public final class BriteContentResolverTest {
   public static final class TestContentProvider extends ContentProvider {
     private final Map<String, String> storage = new LinkedHashMap<>();
 
-    private ContentResolver contentResolver;
-
-    void init(ContentResolver contentResolver) {
-      this.contentResolver = contentResolver;
-    }
-
-
     @Override
     public boolean onCreate() {
-      throw new UnsupportedOperationException("unimplemented mock method");
+      return true;
     }
 
-    @Override
+    @Nullable @Override
     public String getType(@NonNull Uri uri) {
-      throw new UnsupportedOperationException("unimplemented mock method");
+      return null;
     }
 
     @Override public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
       if (values != null) {
         storage.put(values.getAsString(KEY), values.getAsString(VALUE));
+        final Context context = Objects.requireNonNull(getContext());
+        final ContentResolver contentResolver = context.getContentResolver();
         contentResolver.notifyChange(uri, null);
         return Uri.parse(AUTHORITY + "/" + values.getAsString(KEY));
       } else {
@@ -212,6 +208,8 @@ public final class BriteContentResolverTest {
           storage.put(key, values.getAsString(VALUE));
         }
       }
+      final Context context = Objects.requireNonNull(getContext());
+      final ContentResolver contentResolver = context.getContentResolver();
       contentResolver.notifyChange(uri, null);
       return storage.size();
     }
@@ -219,6 +217,8 @@ public final class BriteContentResolverTest {
     @Override public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
       int result = storage.size();
       storage.clear();
+      final Context context = Objects.requireNonNull(getContext());
+      final ContentResolver contentResolver = context.getContentResolver();
       contentResolver.notifyChange(uri, null);
       return result;
     }
