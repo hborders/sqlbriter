@@ -16,6 +16,8 @@
 package com.squareup.sqlbrite3;
 
 import android.database.Cursor;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import io.reactivex.ObservableOperator;
 import io.reactivex.Observer;
@@ -25,25 +27,27 @@ import io.reactivex.observers.DisposableObserver;
 import io.reactivex.plugins.RxJavaPlugins;
 
 final class QueryToOneOperator<T> implements ObservableOperator<T, SqlBrite.Query> {
-  private final Function<Cursor, T> mapper;
-  private final T defaultValue;
+  @NonNull private final Function<Cursor, T> mapper;
+  @Nullable private final T defaultValue;
 
   /** A null {@code defaultValue} means nothing will be emitted when empty. */
-  QueryToOneOperator(Function<Cursor, T> mapper, @Nullable T defaultValue) {
+  QueryToOneOperator(@NonNull Function<Cursor, T> mapper, @Nullable T defaultValue) {
     this.mapper = mapper;
     this.defaultValue = defaultValue;
   }
 
-  @Override public Observer<? super SqlBrite.Query> apply(Observer<? super T> observer) {
+  @NonNull @Override
+  public Observer<? super SqlBrite.Query> apply(@NonNull Observer<? super T> observer) {
     return new MappingObserver<>(observer, mapper, defaultValue);
   }
 
   static final class MappingObserver<T> extends DisposableObserver<SqlBrite.Query> {
-    private final Observer<? super T> downstream;
-    private final Function<Cursor, T> mapper;
-    private final T defaultValue;
+    @NonNull private final Observer<? super T> downstream;
+    @NonNull private final Function<Cursor, T> mapper;
+    @Nullable private final T defaultValue;
 
-    MappingObserver(Observer<? super T> downstream, Function<Cursor, T> mapper, T defaultValue) {
+    MappingObserver(@NonNull Observer<? super T> downstream, @NonNull Function<Cursor, T> mapper,
+                    @Nullable T defaultValue) {
       this.downstream = downstream;
       this.mapper = mapper;
       this.defaultValue = defaultValue;
@@ -53,10 +57,10 @@ final class QueryToOneOperator<T> implements ObservableOperator<T, SqlBrite.Quer
       downstream.onSubscribe(this);
     }
 
-    @Override public void onNext(SqlBrite.Query query) {
+    @Override public void onNext(@NonNull SqlBrite.Query query) {
       try {
-        T item = null;
-        Cursor cursor = query.run();
+        @Nullable final T item;
+        @Nullable final Cursor cursor = query.run();
         if (cursor != null) {
           try {
             if (cursor.moveToNext()) {
@@ -68,10 +72,14 @@ final class QueryToOneOperator<T> implements ObservableOperator<T, SqlBrite.Quer
               if (cursor.moveToNext()) {
                 throw new IllegalStateException("Cursor returned more than 1 row");
               }
+            } else {
+              item = null;
             }
           } finally {
             cursor.close();
           }
+        } else {
+          item = null;
         }
         if (!isDisposed()) {
           if (item != null) {
@@ -92,7 +100,7 @@ final class QueryToOneOperator<T> implements ObservableOperator<T, SqlBrite.Quer
       }
     }
 
-    @Override public void onError(Throwable e) {
+    @Override public void onError(@NonNull Throwable e) {
       if (isDisposed()) {
         RxJavaPlugins.onError(e);
       } else {

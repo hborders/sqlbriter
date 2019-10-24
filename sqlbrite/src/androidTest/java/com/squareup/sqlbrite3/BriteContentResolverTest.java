@@ -49,37 +49,36 @@ import static com.google.common.truth.Truth.assertThat;
 
 public final class BriteContentResolverTest {
 
-  @NonNull
-  private static final Uri AUTHORITY = Objects.requireNonNull(Uri.parse("content://test_authority"));
+  @NonNull private static final Uri AUTHORITY = Objects.requireNonNull(Uri.parse("content://test_authority"));
 
-  @Rule
-  public ProviderTestRule providerRule = new ProviderTestRule.Builder(
+  @NonNull @Rule public ProviderTestRule providerRule = new ProviderTestRule.Builder(
           TestContentProvider.class, Objects.requireNonNull(AUTHORITY.getAuthority())
   ).build();
 
-  private static final Uri TABLE = AUTHORITY.buildUpon().appendPath("test_table").build();
-  private static final String KEY = "test_key";
-  private static final String VALUE = "test_value";
+  @NonNull private static final Uri TABLE = AUTHORITY.buildUpon().appendPath("test_table").build();
+  @NonNull private static final String KEY = "test_key";
+  @NonNull private static final String VALUE = "test_value";
 
-  private final List<String> logs = new ArrayList<>();
-  private final RecordingObserver o = new BlockingRecordingObserver();
-  private final TestScheduler scheduler = new TestScheduler();
-  private final PublishSubject<Object> killSwitch = PublishSubject.create();
+  @NonNull private final List<String> logs = new ArrayList<>();
+  @NonNull private final RecordingObserver o = new BlockingRecordingObserver();
+  @NonNull private final TestScheduler scheduler = new TestScheduler();
+  @NonNull private final PublishSubject<Object> killSwitch = PublishSubject.create();
 
-  private ContentResolver contentResolver;
-  private BriteContentResolver db;
+  @Nullable private ContentResolver contentResolver;
+  @Nullable private BriteContentResolver db;
 
   @Before protected void setUp() {
-    contentResolver = providerRule.getResolver();
+    @NonNull final ContentResolver contentResolver = providerRule.getResolver();
+    this.contentResolver = contentResolver;
 
-    SqlBrite.Logger logger = new SqlBrite.Logger() {
-      @Override public void log(String message) {
+    @NonNull final SqlBrite.Logger logger = new SqlBrite.Logger() {
+      @Override public void log(@NonNull String message) {
         logs.add(message);
       }
     };
-    ObservableTransformer<Query, Query> queryTransformer =
+    @NonNull final ObservableTransformer<Query, Query> queryTransformer =
         new ObservableTransformer<Query, Query>() {
-          @Override public ObservableSource<Query> apply(Observable<Query> upstream) {
+          @NonNull @Override public ObservableSource<Query> apply(@NonNull Observable<Query> upstream) {
             return upstream.takeUntil(killSwitch);
           }
         };
@@ -92,6 +91,9 @@ public final class BriteContentResolverTest {
   }
 
   public void testLoggerEnabled() {
+    @NonNull final ContentResolver contentResolver = Objects.requireNonNull(this.contentResolver);
+    @NonNull final BriteContentResolver db = Objects.requireNonNull(this.db);
+
     db.setLoggingEnabled(true);
 
     db.createQuery(TABLE, null, null, null, null, false).subscribe(o);
@@ -103,6 +105,9 @@ public final class BriteContentResolverTest {
   }
 
   public void testLoggerDisabled() {
+    @NonNull final ContentResolver contentResolver = Objects.requireNonNull(this.contentResolver);
+    @NonNull final BriteContentResolver db = Objects.requireNonNull(this.db);
+
     db.setLoggingEnabled(false);
 
     contentResolver.insert(TABLE, values("key1", "value1"));
@@ -110,6 +115,9 @@ public final class BriteContentResolverTest {
   }
 
   public void testCreateQueryObservesInsert() {
+    @NonNull final ContentResolver contentResolver = Objects.requireNonNull(this.contentResolver);
+    @NonNull final BriteContentResolver db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE, null, null, null, null, false).subscribe(o);
     o.assertCursor().isExhausted();
 
@@ -118,6 +126,9 @@ public final class BriteContentResolverTest {
   }
 
   public void testCreateQueryObservesUpdate() {
+    @NonNull final ContentResolver contentResolver = Objects.requireNonNull(this.contentResolver);
+    @NonNull final BriteContentResolver db = Objects.requireNonNull(this.db);
+
     contentResolver.insert(TABLE, values("key1", "val1"));
     db.createQuery(TABLE, null, null, null, null, false).subscribe(o);
     o.assertCursor().hasRow("key1", "val1").isExhausted();
@@ -127,6 +138,9 @@ public final class BriteContentResolverTest {
   }
 
   public void testCreateQueryObservesDelete() {
+    @NonNull final ContentResolver contentResolver = Objects.requireNonNull(this.contentResolver);
+    @NonNull final BriteContentResolver db = Objects.requireNonNull(this.db);
+
     contentResolver.insert(TABLE, values("key1", "val1"));
     db.createQuery(TABLE, null, null, null, null, false).subscribe(o);
     o.assertCursor().hasRow("key1", "val1").isExhausted();
@@ -136,6 +150,9 @@ public final class BriteContentResolverTest {
   }
 
   public void testUnsubscribeDoesNotTrigger() {
+    @NonNull final ContentResolver contentResolver = Objects.requireNonNull(this.contentResolver);
+    @NonNull final BriteContentResolver db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE, null, null, null, null, false).subscribe(o);
     o.assertCursor().isExhausted();
     o.dispose();
@@ -146,6 +163,9 @@ public final class BriteContentResolverTest {
   }
 
   public void testQueryNotNotifiedWhenQueryTransformerDisposed() {
+    @NonNull final ContentResolver contentResolver = Objects.requireNonNull(this.contentResolver);
+    @NonNull final BriteContentResolver db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE, null, null, null, null, false).subscribe(o);
     o.assertCursor().isExhausted();
 
@@ -157,6 +177,9 @@ public final class BriteContentResolverTest {
   }
 
   public void testInitialValueAndTriggerUsesScheduler() {
+    @NonNull final ContentResolver contentResolver = Objects.requireNonNull(this.contentResolver);
+    @NonNull final BriteContentResolver db = Objects.requireNonNull(this.db);
+
     scheduler.runTasksImmediately(false);
 
     db.createQuery(TABLE, null, null, null, null, false).subscribe(o);
@@ -170,7 +193,7 @@ public final class BriteContentResolverTest {
     o.assertCursor().hasRow("key1", "val1").isExhausted();
   }
 
-  private ContentValues values(String key, String value) {
+  @NonNull private ContentValues values(@NonNull String key, @NonNull String value) {
     ContentValues result = new ContentValues();
     result.put(KEY, key);
     result.put(VALUE, value);
@@ -178,7 +201,7 @@ public final class BriteContentResolverTest {
   }
 
   public static final class TestContentProvider extends ContentProvider {
-    private final Map<String, String> storage = new LinkedHashMap<>();
+    @NonNull private final Map<String, String> storage = new LinkedHashMap<>();
 
     @Override
     public boolean onCreate() {
@@ -193,8 +216,8 @@ public final class BriteContentResolverTest {
     @Override public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
       if (values != null) {
         storage.put(values.getAsString(KEY), values.getAsString(VALUE));
-        final Context context = Objects.requireNonNull(getContext());
-        final ContentResolver contentResolver = context.getContentResolver();
+        @NonNull final Context context = Objects.requireNonNull(getContext());
+        @NonNull final ContentResolver contentResolver = context.getContentResolver();
         contentResolver.notifyChange(uri, null);
         return Uri.parse(AUTHORITY + "/" + values.getAsString(KEY));
       } else {
@@ -204,13 +227,13 @@ public final class BriteContentResolverTest {
 
     @Override public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection,
                                 @Nullable String[] selectionArgs) {
-      for (String key : storage.keySet()) {
+      for (@NonNull final String key : storage.keySet()) {
         if (values != null) {
           storage.put(key, values.getAsString(VALUE));
         }
       }
-      final Context context = Objects.requireNonNull(getContext());
-      final ContentResolver contentResolver = context.getContentResolver();
+      @NonNull final Context context = Objects.requireNonNull(getContext());
+      @NonNull final ContentResolver contentResolver = context.getContentResolver();
       contentResolver.notifyChange(uri, null);
       return storage.size();
     }
@@ -218,8 +241,8 @@ public final class BriteContentResolverTest {
     @Override public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
       int result = storage.size();
       storage.clear();
-      final Context context = Objects.requireNonNull(getContext());
-      final ContentResolver contentResolver = context.getContentResolver();
+      @NonNull final Context context = Objects.requireNonNull(getContext());
+        @NonNull final ContentResolver contentResolver = context.getContentResolver();
       contentResolver.notifyChange(uri, null);
       return result;
     }
@@ -227,7 +250,7 @@ public final class BriteContentResolverTest {
     @Override public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection,
         @Nullable String[] selectionArgs, @Nullable String sortOrder) {
       MatrixCursor result = new MatrixCursor(new String[] { KEY, VALUE });
-      for (Map.Entry<String, String> entry : storage.entrySet()) {
+      for (@NonNull final Map.Entry<String, String> entry : storage.entrySet()) {
         result.addRow(new Object[] { entry.getKey(), entry.getValue() });
       }
       return result;

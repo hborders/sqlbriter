@@ -1,5 +1,6 @@
 package com.squareup.sqlbrite3;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
 
 import org.junit.Test;
@@ -9,7 +10,7 @@ import static com.android.tools.lint.checks.infrastructure.TestLintTask.lint;
 
 public final class SqlBriteArgCountDetectorTest {
     @SuppressWarnings("UnstableApiUsage")
-    private static final LintDetectorTest.TestFile BRITE_DATABASE_STUB =
+    @NonNull private static final LintDetectorTest.TestFile BRITE_DATABASE_STUB =
             java(
                     "package com.squareup.sqlbrite3;\n" +
                             "\n" +

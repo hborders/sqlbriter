@@ -40,44 +40,44 @@ import java.util.Optional;
  * observing the result of a query.
  */
 public final class SqlBrite {
-  static final Logger DEFAULT_LOGGER = new Logger() {
-    @Override public void log(String message) {
+  @NonNull static final Logger DEFAULT_LOGGER = new Logger() {
+    @Override public void log(@NonNull String message) {
       Log.d("SqlBrite", message);
     }
   };
-  static final ObservableTransformer<Query, Query> DEFAULT_TRANSFORMER =
+  @NonNull static final ObservableTransformer<Query, Query> DEFAULT_TRANSFORMER =
       new ObservableTransformer<Query, Query>() {
-        @Override public Observable<Query> apply(Observable<Query> queryObservable) {
+        @NonNull @Override public Observable<Query> apply(@NonNull Observable<Query> queryObservable) {
           return queryObservable;
         }
       };
 
   public static final class Builder {
-    private Logger logger = DEFAULT_LOGGER;
-    private ObservableTransformer<Query, Query> queryTransformer = DEFAULT_TRANSFORMER;
+    @NonNull private Logger logger = DEFAULT_LOGGER;
+    @NonNull private ObservableTransformer<Query, Query> queryTransformer = DEFAULT_TRANSFORMER;
 
-    @CheckResult
+    @CheckResult @NonNull
     public Builder logger(@NonNull Logger logger) {
       if (logger == null) throw new NullPointerException("logger == null");
       this.logger = logger;
       return this;
     }
 
-    @CheckResult
+    @CheckResult @NonNull
     public Builder queryTransformer(@NonNull ObservableTransformer<Query, Query> queryTransformer) {
       if (queryTransformer == null) throw new NullPointerException("queryTransformer == null");
       this.queryTransformer = queryTransformer;
       return this;
     }
 
-    @CheckResult
+    @CheckResult @NonNull
     public SqlBrite build() {
       return new SqlBrite(logger, queryTransformer);
     }
   }
 
-  final Logger logger;
-  final ObservableTransformer<Query, Query> queryTransformer;
+  @NonNull final Logger logger;
+  @NonNull final ObservableTransformer<Query, Query> queryTransformer;
 
   SqlBrite(@NonNull Logger logger, @NonNull ObservableTransformer<Query, Query> queryTransformer) {
     this.logger = logger;
@@ -227,8 +227,8 @@ public final class SqlBrite {
     @CheckResult @NonNull
     public final <T> Observable<T> asRows(final Function<Cursor, T> mapper) {
       return Observable.create(new ObservableOnSubscribe<T>() {
-        @Override public void subscribe(ObservableEmitter<T> e) throws Exception {
-          Cursor cursor = run();
+        @Override public void subscribe(@NonNull ObservableEmitter<T> e) throws Exception {
+          @Nullable final Cursor cursor = run();
           if (cursor != null) {
             try {
               while (cursor.moveToNext() && !e.isDisposed()) {
@@ -248,6 +248,6 @@ public final class SqlBrite {
 
   /** A simple indirection for logging debug messages. */
   public interface Logger {
-    void log(String message);
+    void log(@NonNull String message);
   }
 }

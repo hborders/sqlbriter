@@ -16,6 +16,8 @@
 package com.squareup.sqlbrite3;
 
 import android.annotation.TargetApi;
+
+import androidx.annotation.NonNull;
 import androidx.sqlite.db.SimpleSQLiteQuery;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.sqlite.db.SupportSQLiteOpenHelper;
@@ -97,7 +99,7 @@ public final class BriteDatabaseTest {
     real = helper.getWritableDatabase();
 
     SqlBrite.Logger logger = new SqlBrite.Logger() {
-      @Override public void log(String message) {
+      @Override public void log(@NonNull String message) {
         logs.add(message);
       }
     };

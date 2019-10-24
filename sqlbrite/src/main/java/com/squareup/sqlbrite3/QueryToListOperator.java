@@ -16,6 +16,10 @@
 package com.squareup.sqlbrite3;
 
 import android.database.Cursor;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import io.reactivex.ObservableOperator;
 import io.reactivex.Observer;
 import io.reactivex.exceptions.Exceptions;
@@ -26,21 +30,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 final class QueryToListOperator<T> implements ObservableOperator<List<T>, SqlBrite.Query> {
-  private final Function<Cursor, T> mapper;
+  @NonNull private final Function<Cursor, T> mapper;
 
-  QueryToListOperator(Function<Cursor, T> mapper) {
+  QueryToListOperator(@NonNull Function<Cursor, T> mapper) {
     this.mapper = mapper;
   }
 
-  @Override public Observer<? super SqlBrite.Query> apply(Observer<? super List<T>> observer) {
+  @NonNull @Override
+  public Observer<? super SqlBrite.Query> apply(@NonNull Observer<? super List<T>> observer) {
     return new MappingObserver<>(observer, mapper);
   }
 
   static final class MappingObserver<T> extends DisposableObserver<SqlBrite.Query> {
-    private final Observer<? super List<T>> downstream;
-    private final Function<Cursor, T> mapper;
+    @NonNull private final Observer<? super List<T>> downstream;
+    @NonNull private final Function<Cursor, T> mapper;
 
-    MappingObserver(Observer<? super List<T>> downstream, Function<Cursor, T> mapper) {
+    MappingObserver(@NonNull Observer<? super List<T>> downstream, @NonNull Function<Cursor, T> mapper) {
       this.downstream = downstream;
       this.mapper = mapper;
     }
@@ -49,13 +54,13 @@ final class QueryToListOperator<T> implements ObservableOperator<List<T>, SqlBri
       downstream.onSubscribe(this);
     }
 
-    @Override public void onNext(SqlBrite.Query query) {
+    @Override public void onNext(@NonNull SqlBrite.Query query) {
       try {
-        Cursor cursor = query.run();
+        @Nullable final Cursor cursor = query.run();
         if (cursor == null || isDisposed()) {
           return;
         }
-        List<T> items = new ArrayList<>(cursor.getCount());
+        @NonNull final List<T> items = new ArrayList<>(cursor.getCount());
         try {
           while (cursor.moveToNext()) {
             items.add(mapper.apply(cursor));
@@ -78,7 +83,7 @@ final class QueryToListOperator<T> implements ObservableOperator<List<T>, SqlBri
       }
     }
 
-    @Override public void onError(Throwable e) {
+    @Override public void onError(@NonNull Throwable e) {
       if (isDisposed()) {
         RxJavaPlugins.onError(e);
       } else {

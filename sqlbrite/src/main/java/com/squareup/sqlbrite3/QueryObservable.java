@@ -14,20 +14,20 @@ import java.util.Optional;
 
 /** An {@link Observable} of {@link Query} which offers query-specific convenience operators. */
 public final class QueryObservable extends Observable<Query> {
-  static final Function<Observable<Query>, QueryObservable> QUERY_OBSERVABLE =
+  @NonNull static final Function<Observable<Query>, QueryObservable> QUERY_OBSERVABLE =
       new Function<Observable<Query>, QueryObservable>() {
-        @Override public QueryObservable apply(Observable<Query> queryObservable) {
+        @NonNull @Override public QueryObservable apply(@NonNull Observable<Query> queryObservable) {
           return new QueryObservable(queryObservable);
         }
       };
 
-  private final Observable<Query> upstream;
+  @NonNull private final Observable<Query> upstream;
 
-  public QueryObservable(Observable<Query> upstream) {
+  public QueryObservable(@NonNull Observable<Query> upstream) {
     this.upstream = upstream;
   }
 
-  @Override protected void subscribeActual(Observer<? super Query> observer) {
+  @Override protected void subscribeActual(@NonNull Observer<? super Query> observer) {
     upstream.subscribe(observer);
   }
 

@@ -16,6 +16,8 @@
 package com.example.sqlbrite.todo.db;
 
 import android.app.Application;
+
+import androidx.annotation.NonNull;
 import androidx.sqlite.db.SupportSQLiteOpenHelper;
 import androidx.sqlite.db.SupportSQLiteOpenHelper.Configuration;
 import androidx.sqlite.db.SupportSQLiteOpenHelper.Factory;
@@ -30,17 +32,18 @@ import timber.log.Timber;
 
 @Module
 public final class DbModule {
-  @Provides @Singleton SqlBrite provideSqlBrite() {
+  @NonNull @Provides @Singleton SqlBrite provideSqlBrite() {
     return new SqlBrite.Builder()
         .logger(new SqlBrite.Logger() {
-          @Override public void log(String message) {
+          @Override public void log(@NonNull String message) {
             Timber.tag("Database").v(message);
           }
         })
         .build();
   }
 
-  @Provides @Singleton BriteDatabase provideDatabase(SqlBrite sqlBrite, Application application) {
+    @NonNull @Provides @Singleton BriteDatabase provideDatabase(@NonNull SqlBrite sqlBrite,
+                                                                @NonNull Application application) {
     Configuration configuration = Configuration.builder(application)
         .name("todo.db")
         .callback(new DbCallback())
