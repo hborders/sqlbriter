@@ -1,19 +1,44 @@
 apply plugin: 'com.android.library'
 
+configurations {
+  checkerFrameworkAnnotatedJDK {
+    description = 'a copy of JDK classes with Checker Framework type qualifiers inserted'
+  }
+  errorproneJavac {
+    description = 'required to run the Checker Framework.'
+  }
+}
+
 dependencies {
   api rootProject.ext.rxJava
   api rootProject.ext.supportSqlite
-  implementation rootProject.ext.supportAnnotations
+  api rootProject.ext.supportAnnotations
 
-  androidTestImplementation rootProject.ext.supportTestRunner
-  androidTestImplementation rootProject.ext.androidxTestRunner
+  androidTestImplementation rootProject.ext.supportTestRunner // for AndroidJUnit4, ApplicationProvider
+  androidTestImplementation rootProject.ext.androidxTestRunner // for SdkSuppress
   androidTestImplementation rootProject.ext.truth
   androidTestImplementation rootProject.ext.supportSqliteFramework
 
   lintChecks project(':sqlbrite-lint')
+
+  compileOnly rootProject.ext.checkerQualAndroid
+  annotationProcessor rootProject.ext.checker
+  checkerFrameworkAnnotatedJDK rootProject.ext.checkerJdk8
+  errorproneJavac rootProject.ext.errorproneJavac
 }
 
 android {
+  buildTypes {
+    checkTypes {
+      javaCompileOptions.annotationProcessorOptions.
+              classNames.add("org.checkerframework.checker.nullness.NullnessChecker")
+      javaCompileOptions.annotationProcessorOptions.arguments.put("stubs", project.file('src/main/stubs').path)
+      javaCompileOptions.annotationProcessorOptions.arguments.put("stubWarnIfNotFound", null)
+      // You can pass options like so:
+      // javaCompileOptions.annotationProcessorOptions.arguments.put("warns", "")
+    }
+  }
+
   compileSdkVersion versions.compileSdk
 
   defaultConfig {
@@ -44,6 +69,18 @@ android {
   useLibrary 'android.test.base' // for AndroidTestCase
   useLibrary 'android.test.runner' // for ProviderTestCase2
   useLibrary 'android.test.mock' // for MockContentProvider
+}
+
+gradle.projectsEvaluated {
+  tasks.withType(JavaCompile).all { compile ->
+    if (compile.name.contains("CheckTypes")) {
+      compile.options.compilerArgs += [
+              "-Xbootclasspath/p:${configurations.checkerFrameworkAnnotatedJDK.asPath}"
+      ]
+      options.fork = true
+      options.forkOptions.jvmArgs += ["-Xbootclasspath/p:${configurations.errorproneJavac.asPath}"]
+    }
+  }
 }
 
 apply from: rootProject.file('gradle/gradle-mvn-push.gradle')

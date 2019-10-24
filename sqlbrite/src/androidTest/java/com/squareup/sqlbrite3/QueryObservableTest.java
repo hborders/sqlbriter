@@ -17,6 +17,9 @@ package com.squareup.sqlbrite3;
 
 import android.database.Cursor;
 import android.database.MatrixCursor;
+
+import androidx.annotation.NonNull;
+
 import com.squareup.sqlbrite3.QueryObservable;
 import com.squareup.sqlbrite3.SqlBrite.Query;
 import io.reactivex.Observable;
@@ -25,15 +28,15 @@ import org.junit.Test;
 
 public final class QueryObservableTest {
   @Test public void mapToListThrowsFromQueryRun() {
-    final IllegalStateException error = new IllegalStateException("test exception");
-    Query query = new Query() {
+    @NonNull final IllegalStateException error = new IllegalStateException("test exception");
+    @NonNull final Query query = new Query() {
       @Override public Cursor run() {
         throw error;
       }
     };
     new QueryObservable(Observable.just(query)) //
-        .mapToList(new Function<Cursor, Object>() {
-          @Override public Object apply(Cursor cursor) {
+        .mapToList(new FunctionRR<Cursor, Object>() {
+          @NonNull @Override public Object applyRR(@NonNull Cursor cursor) {
             throw new AssertionError("Must not be called");
           }
         }) //
@@ -43,18 +46,18 @@ public final class QueryObservableTest {
   }
 
   @Test public void mapToListThrowsFromMapFunction() {
-    Query query = new Query() {
+    @NonNull final Query query = new Query() {
       @Override public Cursor run() {
-        MatrixCursor cursor = new MatrixCursor(new String[] { "col1" });
+        @NonNull final MatrixCursor cursor = new MatrixCursor(new String[] { "col1" });
         cursor.addRow(new Object[] { "value1" });
         return cursor;
       }
     };
 
-    final IllegalStateException error = new IllegalStateException("test exception");
+    @NonNull final IllegalStateException error = new IllegalStateException("test exception");
     new QueryObservable(Observable.just(query)) //
-        .mapToList(new Function<Cursor, Object>() {
-          @Override public Object apply(Cursor cursor) {
+        .mapToList(new FunctionRR<Cursor, Object>() {
+          @NonNull @Override public Object applyRR(@NonNull Cursor cursor) {
             throw error;
           }
         }) //

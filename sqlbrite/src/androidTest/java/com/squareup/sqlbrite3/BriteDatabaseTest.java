@@ -16,6 +16,14 @@
 package com.squareup.sqlbrite3;
 
 import android.annotation.TargetApi;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteException;
+import android.os.Build;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.sqlite.db.SimpleSQLiteQuery;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.sqlite.db.SupportSQLiteOpenHelper;
@@ -23,22 +31,19 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper.Configuration;
 import androidx.sqlite.db.SupportSQLiteOpenHelper.Factory;
 import androidx.sqlite.db.SupportSQLiteStatement;
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory;
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteException;
-import android.os.Build;
-import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.filters.SdkSuppress;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
+
 import com.squareup.sqlbrite3.BriteDatabase.Transaction;
 import com.squareup.sqlbrite3.RecordingObserver.CursorAssert;
 import com.squareup.sqlbrite3.TestDb.Employee;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.ObservableTransformer;
-import io.reactivex.functions.Consumer;
-import io.reactivex.subjects.PublishSubject;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,14 +51,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
+
+import javax.annotation.Nonnull;
+
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.ObservableTransformer;
+import io.reactivex.functions.Consumer;
+import io.reactivex.subjects.PublishSubject;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_IGNORE;
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_NONE;
@@ -73,35 +81,35 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.fail;
 
 public final class BriteDatabaseTest {
-  private final TestDb testDb = new TestDb();
-  private final List<String> logs = new ArrayList<>();
-  private final RecordingObserver o = new RecordingObserver();
-  private final TestScheduler scheduler = new TestScheduler();
-  private final PublishSubject<Object> killSwitch = PublishSubject.create();
+  @NonNull  private final TestDb testDb = new TestDb();
+  @NonNull  private final List<String> logs = new ArrayList<>();
+  @NonNull  private final RecordingObserver o = new RecordingObserver();
+  @NonNull  private final TestScheduler scheduler = new TestScheduler();
+  @NonNull  private final PublishSubject<Object> killSwitch = PublishSubject.create();
 
-  @Rule public final TemporaryFolder dbFolder = new TemporaryFolder();
+  @NonNull @Rule public final TemporaryFolder dbFolder = new TemporaryFolder();
 
-  private SupportSQLiteDatabase real;
-  private BriteDatabase db;
+  @Nullable private SupportSQLiteDatabase real;
+  @Nullable private BriteDatabase db;
 
   @Before public void setUp() throws IOException {
-    Configuration configuration = Configuration.builder(
+    @NonNull final Configuration configuration = Configuration.builder(
             InstrumentationRegistry.getInstrumentation().getTargetContext()
     )
         .callback(testDb)
         .name(dbFolder.newFile().getPath())
         .build();
 
-    Factory factory = new FrameworkSQLiteOpenHelperFactory();
-    SupportSQLiteOpenHelper helper = factory.create(configuration);
+    @NonNull final Factory factory = new FrameworkSQLiteOpenHelperFactory();
+    @NonNull final SupportSQLiteOpenHelper helper = factory.create(configuration);
     real = helper.getWritableDatabase();
 
-    SqlBrite.Logger logger = new SqlBrite.Logger() {
-      @Override public void log(String message) {
+    @NonNull final SqlBrite.Logger logger = new SqlBrite.Logger() {
+      @Override public void log(@NonNull String message) {
         logs.add(message);
       }
     };
-    ObservableTransformer<Query, Query> queryTransformer =
+    @NonNull final ObservableTransformer<Query, Query> queryTransformer =
         new ObservableTransformer<Query, Query>() {
           @Override public ObservableSource<Query> apply(Observable<Query> upstream) {
             return upstream.takeUntil(killSwitch);
@@ -115,25 +123,31 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void loggerEnabled() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.setLoggingEnabled(true);
     db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("john", "John Johnson"));
     assertThat(logs).isNotEmpty();
   }
 
   @Test public void loggerDisabled() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.setLoggingEnabled(false);
     db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("john", "John Johnson"));
     assertThat(logs).isEmpty();
   }
 
   @Test public void loggerIndentsSqlForCreateQuery() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.setLoggingEnabled(true);
-    QueryObservable query = db.createQuery(TABLE_EMPLOYEE, "SELECT\n1");
+    @NonNull final QueryObservable query = db.createQuery(TABLE_EMPLOYEE, "SELECT\n1");
     query.subscribe(new Consumer<Query>() {
-      @Override public void accept(Query query) throws Exception {
-        query.run().close();
+      @Override public void accept(@NonNull Query query) throws Exception {
+        Objects.requireNonNull(query.run()).close();
       }
-    });
+    }).isDisposed();
     assertThat(logs).containsExactly(""
         + "QUERY\n"
         + "  tables: [employee]\n"
@@ -142,6 +156,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void loggerIndentsSqlForQuery() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.setLoggingEnabled(true);
     db.query("SELECT\n1").close();
     assertThat(logs).containsExactly(""
@@ -152,6 +168,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void loggerIndentsSqlForExecute() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.setLoggingEnabled(true);
     db.execute("PRAGMA\ncompile_options");
     assertThat(logs).containsExactly(""
@@ -161,6 +179,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void loggerIndentsSqlForExecuteWithArgs() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.setLoggingEnabled(true);
     db.execute("PRAGMA\ncompile_options", new Object[0]);
     assertThat(logs).containsExactly(""
@@ -171,11 +191,16 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void closePropagates() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
+
     db.close();
     assertThat(real.isOpen()).isFalse();
   }
 
   @Test public void query() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -185,6 +210,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryWithQueryObject() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, new SimpleSQLiteQuery(SELECT_EMPLOYEES)).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -194,7 +221,9 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryMapToList() {
-    List<Employee> employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final List<Employee> employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
         .mapToList(Employee.MAPPER)
         .blockingFirst();
     assertThat(employees).containsExactly( //
@@ -204,20 +233,26 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryMapToOne() {
-    Employee employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final Employee employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
         .mapToOne(Employee.MAPPER)
         .blockingFirst();
     assertThat(employees).isEqualTo(new Employee("alice", "Alice Allison"));
   }
 
   @Test public void queryMapToOneOrDefault() {
-    Employee employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final Employee employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
         .mapToOneOrDefault(Employee.MAPPER, new Employee("wrong", "Wrong Person"))
         .blockingFirst();
     assertThat(employees).isEqualTo(new Employee("alice", "Alice Allison"));
   }
 
   @Test public void badQueryCallsError() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     // safeSubscribe is needed because the error occurs in onNext and will otherwise bubble up
     // to the thread exception handler.
     db.createQuery(TABLE_EMPLOYEE, "SELECT * FROM missing").safeSubscribe(o);
@@ -225,6 +260,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryWithArgs() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(
         TABLE_EMPLOYEE, SELECT_EMPLOYEES + " WHERE " + USERNAME + " = ?", "bob")
         .subscribe(o);
@@ -234,6 +271,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryObservesInsert() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -251,6 +290,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryInitialValueAndTriggerUsesScheduler() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     scheduler.runTasksImmediately(false);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
@@ -274,6 +315,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryNotNotifiedWhenInsertFails() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -286,6 +329,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryNotNotifiedWhenQueryTransformerUnsubscribes() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -301,6 +346,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryObservesUpdate() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -308,7 +355,7 @@ public final class BriteDatabaseTest {
         .hasRow("eve", "Eve Evenson")
         .isExhausted();
 
-    ContentValues values = new ContentValues();
+    @NonNull final ContentValues values = new ContentValues();
     values.put(NAME, "Robert Bobberson");
     db.update(TABLE_EMPLOYEE, CONFLICT_NONE, values, USERNAME + " = 'bob'");
     o.assertCursor()
@@ -319,6 +366,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryNotNotifiedWhenUpdateAffectsZeroRows() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -326,13 +375,15 @@ public final class BriteDatabaseTest {
         .hasRow("eve", "Eve Evenson")
         .isExhausted();
 
-    ContentValues values = new ContentValues();
+    @NonNull final ContentValues values = new ContentValues();
     values.put(NAME, "John Johnson");
     db.update(TABLE_EMPLOYEE, CONFLICT_NONE, values, USERNAME + " = 'john'");
     o.assertNoMoreEvents();
   }
 
   @Test public void queryObservesDelete() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -348,6 +399,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryNotNotifiedWhenDeleteAffectsZeroRows() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -360,6 +413,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryMultipleTables() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(BOTH_TABLES, SELECT_MANAGER_LIST).subscribe(o);
     o.assertCursor()
         .hasRow("Eve Evenson", "Alice Allison")
@@ -367,6 +422,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryMultipleTablesWithQueryObject() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(BOTH_TABLES, new SimpleSQLiteQuery(SELECT_MANAGER_LIST)).subscribe(o);
     o.assertCursor()
         .hasRow("Eve Evenson", "Alice Allison")
@@ -374,6 +431,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryMultipleTablesObservesChanges() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(BOTH_TABLES, SELECT_MANAGER_LIST).subscribe(o);
     o.assertCursor()
         .hasRow("Eve Evenson", "Alice Allison")
@@ -394,14 +453,16 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryMultipleTablesObservesChangesOnlyOnce() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     // Employee table is in this list twice. We should still only be notified once for a change.
-    List<String> tables = Arrays.asList(TABLE_EMPLOYEE, TABLE_MANAGER, TABLE_EMPLOYEE);
+    @NonNull final List<String> tables = Arrays.asList(TABLE_EMPLOYEE, TABLE_MANAGER, TABLE_EMPLOYEE);
     db.createQuery(tables, SELECT_MANAGER_LIST).subscribe(o);
     o.assertCursor()
         .hasRow("Eve Evenson", "Alice Allison")
         .isExhausted();
 
-    ContentValues values = new ContentValues();
+    @NonNull final ContentValues values = new ContentValues();
     values.put(NAME, "Even Evenson");
     db.update(TABLE_EMPLOYEE, CONFLICT_NONE, values, USERNAME + " = 'eve'");
     o.assertCursor()
@@ -410,6 +471,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryNotNotifiedAfterDispose() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -423,7 +486,9 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryOnlyNotifiedAfterSubscribe() {
-    Observable<Query> query = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES);
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final Observable<Query> query = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES);
     o.assertNoMoreEvents();
 
     db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("john", "John Johnson"));
@@ -439,6 +504,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeSqlNoTrigger() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
         .skip(1) // Skip initial
         .subscribe(o);
@@ -448,6 +515,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeSqlWithArgsNoTrigger() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
         .skip(1) // Skip initial
         .subscribe(o);
@@ -457,6 +526,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeSqlAndTrigger() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -474,11 +545,13 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeSqlAndTriggerMultipleTables() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_MANAGER, SELECT_MANAGER_LIST).subscribe(o);
     o.assertCursor()
         .hasRow("Eve Evenson", "Alice Allison")
         .isExhausted();
-    final RecordingObserver employeeObserver = new RecordingObserver();
+    @Nonnull final RecordingObserver employeeObserver = new RecordingObserver();
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(employeeObserver);
     employeeObserver.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -486,7 +559,7 @@ public final class BriteDatabaseTest {
         .hasRow("eve", "Eve Evenson")
         .isExhausted();
 
-    final Set<String> tablesToTrigger = Collections.unmodifiableSet(new HashSet<>(BOTH_TABLES));
+    @NonNull final Set<String> tablesToTrigger = Collections.unmodifiableSet(new HashSet<>(BOTH_TABLES));
     db.executeAndTrigger(tablesToTrigger,
         "UPDATE " + TABLE_EMPLOYEE + " SET " + NAME + " = 'Zach'");
 
@@ -501,6 +574,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeSqlAndTriggerWithNoTables() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_MANAGER, SELECT_MANAGER_LIST).subscribe(o);
     o.assertCursor()
         .hasRow("Eve Evenson", "Alice Allison")
@@ -513,6 +588,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeSqlThrowsAndDoesNotTrigger() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
         .skip(1) // Skip initial
         .subscribe(o);
@@ -527,6 +604,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeSqlWithArgsAndTrigger() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -544,6 +623,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeSqlWithArgsThrowsAndDoesNotTrigger() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
         .skip(1) // Skip initial
         .subscribe(o);
@@ -558,11 +639,13 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeSqlWithArgsAndTriggerWithMultipleTables() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_MANAGER, SELECT_MANAGER_LIST).subscribe(o);
     o.assertCursor()
         .hasRow("Eve Evenson", "Alice Allison")
         .isExhausted();
-    final RecordingObserver employeeObserver = new RecordingObserver();
+    @NonNull final RecordingObserver employeeObserver = new RecordingObserver();
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(employeeObserver);
     employeeObserver.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -570,7 +653,7 @@ public final class BriteDatabaseTest {
         .hasRow("eve", "Eve Evenson")
         .isExhausted();
 
-    final Set<String> tablesToTrigger = Collections.unmodifiableSet(new HashSet<>(BOTH_TABLES));
+    @NonNull final Set<String> tablesToTrigger = Collections.unmodifiableSet(new HashSet<>(BOTH_TABLES));
     db.executeAndTrigger(tablesToTrigger,
         "UPDATE " + TABLE_EMPLOYEE + " SET " + NAME + " = ?", "Zach");
 
@@ -585,6 +668,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeSqlWithArgsAndTriggerWithNoTables() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(BOTH_TABLES, SELECT_MANAGER_LIST).subscribe(o);
     o.assertCursor()
         .hasRow("Eve Evenson", "Alice Allison")
@@ -597,7 +682,10 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeInsertAndTrigger() {
-    SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
+
+    @NonNull final SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
         + TABLE_EMPLOYEE + " (" + NAME + ", " + USERNAME + ") "
         + "VALUES ('Chad Chadson', 'chad')");
 
@@ -618,7 +706,10 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeInsertAndDontTrigger() {
-    SupportSQLiteStatement statement = real.compileStatement("INSERT OR IGNORE INTO "
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
+
+    @NonNull final SupportSQLiteStatement statement = real.compileStatement("INSERT OR IGNORE INTO "
         + TABLE_EMPLOYEE + " (" + NAME + ", " + USERNAME + ") "
         + "VALUES ('Alice Allison', 'alice')");
 
@@ -634,11 +725,14 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeInsertAndTriggerMultipleTables() {
-    SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
+
+    @NonNull final SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
         + TABLE_EMPLOYEE + " (" + NAME + ", " + USERNAME + ") "
         + "VALUES ('Chad Chadson', 'chad')");
 
-    final RecordingObserver managerObserver = new RecordingObserver();
+    @NonNull final RecordingObserver managerObserver = new RecordingObserver();
     db.createQuery(TABLE_MANAGER, SELECT_MANAGER_LIST).subscribe(managerObserver);
     managerObserver.assertCursor()
         .hasRow("Eve Evenson", "Alice Allison")
@@ -651,7 +745,7 @@ public final class BriteDatabaseTest {
         .hasRow("eve", "Eve Evenson")
         .isExhausted();
 
-    final Set<String> employeeAndManagerTables = Collections.unmodifiableSet(new HashSet<>(
+    @NonNull final Set<String> employeeAndManagerTables = Collections.unmodifiableSet(new HashSet<>(
         BOTH_TABLES));
     db.executeInsert(employeeAndManagerTables, statement);
 
@@ -667,7 +761,10 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeInsertAndTriggerNoTables() {
-    SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
+
+    @NonNull final SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
         + TABLE_EMPLOYEE + " (" + NAME + ", " + USERNAME + ") "
         + "VALUES ('Chad Chadson', 'chad')");
 
@@ -684,7 +781,10 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeInsertThrowsAndDoesNotTrigger() {
-    SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
+
+    @NonNull final SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
         + TABLE_EMPLOYEE + " (" + NAME + ", " + USERNAME + ") "
         + "VALUES ('Alice Allison', 'alice')");
 
@@ -701,7 +801,10 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeInsertWithArgsAndTrigger() {
-    SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
+
+    @NonNull final SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
         + TABLE_EMPLOYEE + " (" + NAME + ", " + USERNAME + ") VALUES (?, ?)");
     statement.bindString(1, "Chad Chadson");
     statement.bindString(2, "chad");
@@ -723,7 +826,10 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void executeInsertWithArgsThrowsAndDoesNotTrigger() {
-    SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
+
+    @NonNull final SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
         + TABLE_EMPLOYEE + " (" + NAME + ", " + USERNAME + ") VALUES (?, ?)");
     statement.bindString(1, "Alice Aliison");
     statement.bindString(2, "alice");
@@ -743,7 +849,10 @@ public final class BriteDatabaseTest {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.HONEYCOMB)
   @Test public void executeUpdateDeleteAndTrigger() {
-    SupportSQLiteStatement statement = real.compileStatement(
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
+
+    @NonNull final SupportSQLiteStatement statement = real.compileStatement(
         "UPDATE " + TABLE_EMPLOYEE + " SET " + NAME + " = 'Zach'");
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
@@ -764,7 +873,10 @@ public final class BriteDatabaseTest {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.HONEYCOMB)
   @Test public void executeUpdateDeleteAndDontTrigger() {
-    SupportSQLiteStatement statement = real.compileStatement(""
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
+
+    @NonNull final SupportSQLiteStatement statement = real.compileStatement(""
         + "UPDATE " + TABLE_EMPLOYEE
         + " SET " + NAME + " = 'Zach'"
         + " WHERE " + NAME + " = 'Rob'");
@@ -783,7 +895,10 @@ public final class BriteDatabaseTest {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.HONEYCOMB)
   @Test public void executeUpdateDeleteAndTriggerWithMultipleTables() {
-    SupportSQLiteStatement statement = real.compileStatement(
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
+
+    @NonNull final SupportSQLiteStatement statement = real.compileStatement(
         "UPDATE " + TABLE_EMPLOYEE + " SET " + NAME + " = 'Zach'");
 
 
@@ -800,7 +915,7 @@ public final class BriteDatabaseTest {
         .hasRow("eve", "Eve Evenson")
         .isExhausted();
 
-    final Set<String> employeeAndManagerTables = Collections.unmodifiableSet(new HashSet<>(BOTH_TABLES));
+    @NonNull final Set<String> employeeAndManagerTables = Collections.unmodifiableSet(new HashSet<>(BOTH_TABLES));
     db.executeUpdateDelete(employeeAndManagerTables, statement);
 
     o.assertCursor()
@@ -816,7 +931,10 @@ public final class BriteDatabaseTest {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.HONEYCOMB)
   @Test public void executeUpdateDeleteAndTriggerWithNoTables() {
-    SupportSQLiteStatement statement = real.compileStatement(
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
+
+    @NonNull final SupportSQLiteStatement statement = real.compileStatement(
         "UPDATE " + TABLE_EMPLOYEE + " SET " + NAME + " = 'Zach'");
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
@@ -834,7 +952,10 @@ public final class BriteDatabaseTest {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.HONEYCOMB)
   @Test public void executeUpdateDeleteThrowsAndDoesNotTrigger() {
-    SupportSQLiteStatement statement = real.compileStatement(
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
+
+    @NonNull final SupportSQLiteStatement statement = real.compileStatement(
         "UPDATE " + TABLE_EMPLOYEE + " SET " + USERNAME + " = 'alice'");
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
@@ -852,7 +973,10 @@ public final class BriteDatabaseTest {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.HONEYCOMB)
   @Test public void executeUpdateDeleteWithArgsAndTrigger() {
-    SupportSQLiteStatement statement = real.compileStatement(
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
+
+    @NonNull final SupportSQLiteStatement statement = real.compileStatement(
         "UPDATE " + TABLE_EMPLOYEE + " SET " + NAME + " = ?");
     statement.bindString(1, "Zach");
 
@@ -874,7 +998,10 @@ public final class BriteDatabaseTest {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.HONEYCOMB)
   @Test public void executeUpdateDeleteWithArgsThrowsAndDoesNotTrigger() {
-    SupportSQLiteStatement statement = real.compileStatement(
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
+
+    @NonNull final SupportSQLiteStatement statement = real.compileStatement(
         "UPDATE " + TABLE_EMPLOYEE + " SET " + USERNAME + " = ?");
     statement.bindString(1, "alice");
 
@@ -891,6 +1018,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void transactionOnlyNotifiesOnce() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -898,7 +1027,7 @@ public final class BriteDatabaseTest {
         .hasRow("eve", "Eve Evenson")
         .isExhausted();
 
-    Transaction transaction = db.newTransaction();
+    @NonNull final Transaction transaction = db.newTransaction();
     try {
       db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("john", "John Johnson"));
       db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("nick", "Nick Nickers"));
@@ -919,6 +1048,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void transactionCreatedFromTransactionNotificationWorks() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     // Tests the case where a transaction is created in the subscriber to a query which gets
     // notified as the result of another transaction being committed. With improper ordering, this
     // can result in creating a new transaction before the old is committed on the underlying DB.
@@ -928,9 +1059,9 @@ public final class BriteDatabaseTest {
           @Override public void accept(Query query) {
             db.newTransaction().end();
           }
-        });
+        }).isDisposed();
 
-    Transaction transaction = db.newTransaction();
+    @NonNull final Transaction transaction = db.newTransaction();
     try {
       db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("john", "John Johnson"));
       transaction.markSuccessful();
@@ -940,6 +1071,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void transactionIsCloseable() throws IOException {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -947,9 +1080,8 @@ public final class BriteDatabaseTest {
         .hasRow("eve", "Eve Evenson")
         .isExhausted();
 
-    Transaction transaction = db.newTransaction();
-    //noinspection UnnecessaryLocalVariable
-    Closeable closeableTransaction = transaction; // Verify type is implemented.
+    @NonNull final Transaction transaction = db.newTransaction();
+    @NonNull final Closeable closeableTransaction = transaction; // Verify type is implemented.
     try {
       db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("john", "John Johnson"));
       db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("nick", "Nick Nickers"));
@@ -968,6 +1100,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void transactionDoesNotThrow() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -975,7 +1109,7 @@ public final class BriteDatabaseTest {
         .hasRow("eve", "Eve Evenson")
         .isExhausted();
 
-    Transaction transaction = db.newTransaction();
+    @NonNull final Transaction transaction = db.newTransaction();
     try {
       db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("john", "John Johnson"));
       db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("nick", "Nick Nickers"));
@@ -994,6 +1128,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryCreatedDuringTransactionThrows() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     //noinspection CheckResult
     db.newTransaction();
     try {
@@ -1006,7 +1142,9 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void querySubscribedToDuringTransactionThrows() {
-    Observable<Query> query = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES);
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final Observable<Query> query = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES);
 
     db.newTransaction();
     query.subscribe(o);
@@ -1014,7 +1152,9 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void callingEndMultipleTimesThrows() {
-    Transaction transaction = db.newTransaction();
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final Transaction transaction = db.newTransaction();
     transaction.end();
     try {
       transaction.end();
@@ -1026,9 +1166,11 @@ public final class BriteDatabaseTest {
 
   @Test public void querySubscribedToDuringTransactionOnDifferentThread()
       throws InterruptedException {
-    Transaction transaction = db.newTransaction();
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
 
-    final CountDownLatch latch = new CountDownLatch(1);
+    @NonNull final Transaction transaction = db.newTransaction();
+
+    @NonNull final CountDownLatch latch = new CountDownLatch(1);
     new Thread() {
       @Override public void run() {
         db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
@@ -1050,9 +1192,11 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void queryCreatedBeforeTransactionButSubscribedAfter() {
-    Observable<Query> query = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES);
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
 
-    Transaction transaction = db.newTransaction();
+    @NonNull final Observable<Query> query = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES);
+
+    @NonNull final Transaction transaction = db.newTransaction();
     try {
       db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("john", "John Johnson"));
       db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("nick", "Nick Nickers"));
@@ -1072,7 +1216,9 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void synchronousQueryDuringTransaction() {
-    Transaction transaction = db.newTransaction();
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final Transaction transaction = db.newTransaction();
     try {
       transaction.markSuccessful();
       assertCursor(db.query(SELECT_EMPLOYEES))
@@ -1086,7 +1232,9 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void synchronousQueryDuringTransactionSeesChanges() {
-    Transaction transaction = db.newTransaction();
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final Transaction transaction = db.newTransaction();
     try {
       assertCursor(db.query(SELECT_EMPLOYEES))
           .hasRow("alice", "Alice Allison")
@@ -1112,7 +1260,9 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void synchronousQueryWithSupportSQLiteQueryDuringTransaction() {
-    Transaction transaction = db.newTransaction();
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final Transaction transaction = db.newTransaction();
     try {
       transaction.markSuccessful();
       assertCursor(db.query(new SimpleSQLiteQuery(SELECT_EMPLOYEES)))
@@ -1126,7 +1276,9 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void synchronousQueryWithSupportSQLiteQueryDuringTransactionSeesChanges() {
-    Transaction transaction = db.newTransaction();
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final Transaction transaction = db.newTransaction();
     try {
       assertCursor(db.query(new SimpleSQLiteQuery(SELECT_EMPLOYEES)))
               .hasRow("alice", "Alice Allison")
@@ -1152,6 +1304,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void nestedTransactionsOnlyNotifyOnce() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -1159,11 +1313,11 @@ public final class BriteDatabaseTest {
         .hasRow("eve", "Eve Evenson")
         .isExhausted();
 
-    Transaction transactionOuter = db.newTransaction();
+    @NonNull final Transaction transactionOuter = db.newTransaction();
     try {
       db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("john", "John Johnson"));
 
-      Transaction transactionInner = db.newTransaction();
+      @NonNull final Transaction transactionInner = db.newTransaction();
       try {
         db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("nick", "Nick Nickers"));
         transactionInner.markSuccessful();
@@ -1186,28 +1340,30 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void nestedTransactionsOnMultipleTables() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(BOTH_TABLES, SELECT_MANAGER_LIST).subscribe(o);
     o.assertCursor()
         .hasRow("Eve Evenson", "Alice Allison")
         .isExhausted();
 
-    Transaction transactionOuter = db.newTransaction();
+    @NonNull final Transaction transactionOuter = db.newTransaction();
     try {
 
-      Transaction transactionInner = db.newTransaction();
+      @NonNull final Transaction transactionInner1 = db.newTransaction();
       try {
         db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("john", "John Johnson"));
-        transactionInner.markSuccessful();
+        transactionInner1.markSuccessful();
       } finally {
-        transactionInner.end();
+        transactionInner1.end();
       }
 
-      transactionInner = db.newTransaction();
+      @NonNull final Transaction transactionInner2 = db.newTransaction();
       try {
         db.insert(TABLE_MANAGER, CONFLICT_NONE, manager(testDb.aliceId, testDb.bobId));
-        transactionInner.markSuccessful();
+        transactionInner2.markSuccessful();
       } finally {
-        transactionInner.end();
+        transactionInner2.end();
       }
 
       transactionOuter.markSuccessful();
@@ -1222,6 +1378,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void emptyTransactionDoesNotNotify() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -1229,7 +1387,7 @@ public final class BriteDatabaseTest {
         .hasRow("eve", "Eve Evenson")
         .isExhausted();
 
-    Transaction transaction = db.newTransaction();
+    @NonNull final Transaction transaction = db.newTransaction();
     try {
       transaction.markSuccessful();
     } finally {
@@ -1239,6 +1397,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void transactionRollbackDoesNotNotify() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
         .hasRow("alice", "Alice Allison")
@@ -1246,7 +1406,7 @@ public final class BriteDatabaseTest {
         .hasRow("eve", "Eve Evenson")
         .isExhausted();
 
-    Transaction transaction = db.newTransaction();
+    @NonNull final Transaction transaction = db.newTransaction();
     try {
       db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("john", "John Johnson"));
       db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("nick", "Nick Nickers"));
@@ -1260,13 +1420,15 @@ public final class BriteDatabaseTest {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.HONEYCOMB)
   @Test public void nonExclusiveTransactionWorks() throws InterruptedException {
-    final CountDownLatch transactionStarted = new CountDownLatch(1);
-    final CountDownLatch transactionProceed = new CountDownLatch(1);
-    final CountDownLatch transactionCompleted = new CountDownLatch(1);
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
+    @NonNull final CountDownLatch transactionStarted = new CountDownLatch(1);
+    @NonNull final CountDownLatch transactionProceed = new CountDownLatch(1);
+    @NonNull final CountDownLatch transactionCompleted = new CountDownLatch(1);
 
     new Thread() {
       @Override public void run() {
-        Transaction transaction = db.newNonExclusiveTransaction();
+        @NonNull final Transaction transaction = db.newNonExclusiveTransaction();
         transactionStarted.countDown();
         try {
           db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("hans", "Hans Hanson"));
@@ -1283,7 +1445,7 @@ public final class BriteDatabaseTest {
     assertThat(transactionStarted.await(10, SECONDS)).isTrue();
 
     //Simple query
-    Employee employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
+    @NonNull final Employee employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
             .lift(Query.mapToOne(Employee.MAPPER))
             .blockingFirst();
     assertThat(employees).isEqualTo(new Employee("alice", "Alice Allison"));
@@ -1293,6 +1455,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void badQueryThrows() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     try {
       //noinspection CheckResult
       db.query("SELECT * FROM missing");
@@ -1303,6 +1467,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void badInsertThrows() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     try {
       db.insert("missing", CONFLICT_NONE, employee("john", "John Johnson"));
       fail();
@@ -1312,6 +1478,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void badUpdateThrows() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     try {
       db.update("missing", CONFLICT_NONE, employee("john", "John Johnson"), "1");
       fail();
@@ -1321,6 +1489,8 @@ public final class BriteDatabaseTest {
   }
 
   @Test public void badDeleteThrows() {
+    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+
     try {
       db.delete("missing", "1");
       fail();
@@ -1329,7 +1499,8 @@ public final class BriteDatabaseTest {
     }
   }
 
-  private static CursorAssert assertCursor(Cursor cursor) {
+  @NonNull
+  private static CursorAssert assertCursor(@NonNull Cursor cursor) {
     return new CursorAssert(cursor);
   }
 }
