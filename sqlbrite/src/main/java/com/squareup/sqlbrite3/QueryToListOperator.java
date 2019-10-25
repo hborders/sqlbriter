@@ -63,6 +63,7 @@ final class QueryToListOperator<T> implements ObservableOperator<List<T>, SqlBri
         @NonNull final List<T> items = new ArrayList<>(cursor.getCount());
         try {
           while (cursor.moveToNext()) {
+            // TODO force this value to be @NonNull
             items.add(mapper.apply(cursor));
           }
         } finally {

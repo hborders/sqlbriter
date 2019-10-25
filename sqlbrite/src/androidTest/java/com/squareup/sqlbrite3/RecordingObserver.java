@@ -87,6 +87,7 @@ class RecordingObserver extends DisposableObserver<Query> {
       this.cursor = cursor;
     }
 
+    @NonNull
     public CursorAssert hasRow(@NonNull Object... values) {
       assertWithMessage("row " + (row + 1) + " exists")
           .that(cursor.moveToNext()).isTrue();

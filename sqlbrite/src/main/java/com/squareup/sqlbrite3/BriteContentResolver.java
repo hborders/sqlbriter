@@ -101,7 +101,7 @@ public final class BriteContentResolver {
                                                               selectionArgs, sortOrder);
 
         if (logging) {
-          long tookMillis = NANOSECONDS.toMillis(nanoTime() - startNanos);
+          final long tookMillis = NANOSECONDS.toMillis(nanoTime() - startNanos);
           log("QUERY (%sms)\n  uri: %s\n  projection: %s\n  selection: %s\n  selectionArgs: %s\n  "
                   + "sortOrder: %s\n  notifyForDescendents: %s", tookMillis, uri,
               Arrays.toString(projection), selection, Arrays.toString(selectionArgs), sortOrder,

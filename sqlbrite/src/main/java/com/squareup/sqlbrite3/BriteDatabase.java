@@ -68,7 +68,7 @@ public final class BriteDatabase implements Closeable {
   @NonNull private final ObservableTransformer<Query, Query> queryTransformer;
 
   // Package-private to avoid synthetic accessor method for 'transaction' instance.
-  final ThreadLocal<SqliteTransaction> transactions = new ThreadLocal<>();
+  @NonNull final ThreadLocal<SqliteTransaction> transactions = new ThreadLocal<>();
   @NonNull private final Subject<Set<String>> triggers = PublishSubject.create();
 
   @NonNull private final Transaction transaction = new Transaction() {
@@ -104,8 +104,8 @@ public final class BriteDatabase implements Closeable {
       end();
     }
   };
-  private final Consumer<Object> ensureNotInTransaction = new Consumer<Object>() {
-    @Override public void accept(Object ignored) throws Exception {
+  @NonNull private final Consumer<Object> ensureNotInTransaction = new Consumer<Object>() {
+    @Override public void accept(@NonNull Object ignored) throws Exception {
       @Nullable final SqliteTransaction transaction = transactions.get();
       if (transaction != null) {
         throw new IllegalStateException("Cannot subscribe to observable query in a transaction.");
@@ -802,12 +802,12 @@ public final class BriteDatabase implements Closeable {
       this.query = query;
     }
 
-    @Override public Cursor run() {
+    @Nullable @Override public Cursor run() {
       if (transactions.get() != null) {
         throw new IllegalStateException("Cannot execute observable query in a transaction.");
       }
 
-      Cursor cursor = getReadableDatabase().query(query);
+      @Nullable final Cursor cursor = getReadableDatabase().query(query);
 
       if (logging) {
         log("QUERY\n  tables: %s\n  sql: %s", tables, indentSql(query.getSql()));
