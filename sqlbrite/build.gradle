@@ -58,4 +58,14 @@ android {
   }
 }
 
+gradle.projectsEvaluated {
+  tasks.withType(JavaCompile).all { compile ->
+    if (compile.name.contains("CheckTypes")) {
+      compile.options.compilerArgs += [
+              "-Xbootclasspath/p:${configurations.checkerFrameworkAnnotatedJDK.asPath}"
+      ]
+    }
+  }
+}
+
 apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
