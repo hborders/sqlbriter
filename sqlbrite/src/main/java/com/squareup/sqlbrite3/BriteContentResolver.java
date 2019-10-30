@@ -95,7 +95,7 @@ public final class BriteContentResolver {
       @Nullable final String selection, @Nullable final String[] selectionArgs,
       @Nullable final String sortOrder, final boolean notifyForDescendents) {
     @NonNull final Query query = new Query() {
-      @Override public Cursor run() {
+      @Nullable @Override public Cursor run() {
         final long startNanos = nanoTime();
         @Nullable final Cursor cursor = contentResolver.query(uri, projection, selection,
                                                               selectionArgs, sortOrder);
@@ -104,8 +104,8 @@ public final class BriteContentResolver {
           final long tookMillis = NANOSECONDS.toMillis(nanoTime() - startNanos);
           log("QUERY (%sms)\n  uri: %s\n  projection: %s\n  selection: %s\n  selectionArgs: %s\n  "
                   + "sortOrder: %s\n  notifyForDescendents: %s", tookMillis, uri,
-              Arrays.toString(projection), selection, Arrays.toString(selectionArgs), sortOrder,
-              notifyForDescendents);
+              Arrays.toString(projection), String.valueOf(selection), Arrays.toString(selectionArgs),
+              String.valueOf(sortOrder), notifyForDescendents);
         }
 
         return cursor;
@@ -140,7 +140,10 @@ public final class BriteContentResolver {
 
   // Package-private to avoid synthetic accessor method for 'Query' instance in #createQuery
   void log(@NonNull String message, @NonNull Object... args) {
-    if (args.length > 0) message = String.format(message, args);
-    logger.log(message);
+    if (args.length == 0) {
+      logger.log(message);
+    } else {
+      logger.log(String.format(message, args));
+    }
   }
 }

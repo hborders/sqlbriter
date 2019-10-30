@@ -33,6 +33,7 @@ import io.reactivex.ObservableTransformer;
 import io.reactivex.Scheduler;
 import io.reactivex.functions.Function;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -225,14 +226,14 @@ public final class SqlBrite {
      * The resulting observable will be empty if {@code null} is returned from {@link #run()}.
      */
     @CheckResult @NonNull
-    public final <T> Observable<T> asRows(final Function<Cursor, T> mapper) {
+    public final <T> Observable<T> asRows(@NonNull final Function<Cursor, T> mapper) {
       return Observable.create(new ObservableOnSubscribe<T>() {
         @Override public void subscribe(@NonNull ObservableEmitter<T> e) throws Exception {
           @Nullable final Cursor cursor = run();
           if (cursor != null) {
             try {
               while (cursor.moveToNext() && !e.isDisposed()) {
-                e.onNext(mapper.apply(cursor));
+                e.onNext(Objects.requireNonNull(mapper.apply(cursor)));
               }
             } finally {
               cursor.close();

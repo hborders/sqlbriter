@@ -68,12 +68,12 @@ public final class BriteDatabase implements Closeable {
   @NonNull private final ObservableTransformer<Query, Query> queryTransformer;
 
   // Package-private to avoid synthetic accessor method for 'transaction' instance.
-  @NonNull final ThreadLocal<SqliteTransaction> transactions = new ThreadLocal<>();
+  @NonNull final ThreadLocal<@org.checkerframework.checker.nullness.qual.Nullable SqliteTransaction> transactions = new ThreadLocal<>();
   @NonNull private final Subject<Set<String>> triggers = PublishSubject.create();
 
   @NonNull private final Transaction transaction = new Transaction() {
     @Override public void markSuccessful() {
-      if (logging) log("TXN SUCCESS %s", transactions.get());
+      if (logging) log("TXN SUCCESS %s", String.valueOf(transactions.get()));
       getWritableDatabase().setTransactionSuccessful();
     }
 
@@ -462,10 +462,11 @@ public final class BriteDatabase implements Closeable {
     @NonNull final SupportSQLiteDatabase db = getWritableDatabase();
 
     if (logging) {
-      log("DELETE\n  table: %s\n  whereClause: %s\n  whereArgs: %s", table, whereClause,
+      log("DELETE\n  table: %s\n  whereClause: %s\n  whereArgs: %s", table,
+          String.valueOf(whereClause),
           Arrays.toString(whereArgs));
     }
-    final int rows = db.delete(table, whereClause, whereArgs);
+    final int rows = db.delete(table, nonnullify(whereClause), nonnullify(whereArgs));
 
     if (logging) log("DELETE affected %s %s", rows, rows != 1 ? "rows" : "row");
 
@@ -489,10 +490,10 @@ public final class BriteDatabase implements Closeable {
 
     if (logging) {
       log("UPDATE\n  table: %s\n  values: %s\n  whereClause: %s\n  whereArgs: %s\n  conflictAlgorithm: %s",
-          table, values, whereClause, Arrays.toString(whereArgs),
+          table, values, String.valueOf(whereClause), Arrays.toString(whereArgs),
           conflictString(conflictAlgorithm));
     }
-    final int rows = db.update(table, conflictAlgorithm, values, whereClause, whereArgs);
+    final int rows = db.update(table, conflictAlgorithm, values, nonnullify(whereClause), nonnullify(whereArgs));
 
     if (logging) log("UPDATE affected %s %s", rows, rows != 1 ? "rows" : "row");
 
@@ -746,6 +747,26 @@ public final class BriteDatabase implements Closeable {
   void log(@NonNull String message, @NonNull Object... args) {
     if (args.length > 0) message = String.format(message, args);
     logger.log(message);
+  }
+
+  @NonNull
+  private static String nonnullify(@Nullable String string) {
+    if (string == null) {
+      return "";
+    } else {
+      return string;
+    }
+  }
+
+  @NonNull private static final String[] EMPTY_STRING_ARRAY = new String[0];
+
+  @NonNull
+  private static String[] nonnullify(@Nullable String[] strings) {
+    if (strings == null) {
+      return EMPTY_STRING_ARRAY;
+    } else {
+      return strings;
+    }
   }
 
   private static String conflictString(@ConflictAlgorithm int conflictAlgorithm) {
