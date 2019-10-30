@@ -27,6 +27,16 @@ allprojects {
   version = VERSION_NAME
 }
 
+gradle.projectsEvaluated {
+  tasks.withType(JavaCompile).all { compile ->
+    if (compile.name.contains("CheckTypes")) {
+      compile.options.compilerArgs += [
+              "-Xbootclasspath/p:${configurations.checkerFrameworkAnnotatedJDK.asPath}"
+      ]
+    }
+  }
+}
+
 ext {
   // Android dependencies.
   supportV4 = 'androidx.legacy:legacy-support-v4:1.0.0'
@@ -55,6 +65,11 @@ ext {
   lintApi = "com.android.tools.lint:lint-api:${versions.lint}"
   lint = "com.android.tools.lint:lint:${versions.lint}"
   lintTests = "com.android.tools.lint:lint-tests:${versions.lint}"
+
+  // Checker dependencies.
+  checkerQualAndroid = "org.checkerframework:checker-qual-android:2.11.1"
+  checker = "org.checkerframework:checker:2.11.1"
+  checkerJdk8 = "org.checkerframework:jdk8:2.11.1"
 }
 
 configurations {

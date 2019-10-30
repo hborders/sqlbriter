@@ -1,5 +1,11 @@
 apply plugin: 'com.android.library'
 
+configurations {
+  checkerFrameworkAnnotatedJDK {
+    description = 'a copy of JDK classes with Checker Framework type qualifiers inserted'
+  }
+}
+
 dependencies {
   api rootProject.ext.rxJava
   api rootProject.ext.supportSqlite
@@ -12,9 +18,19 @@ dependencies {
   androidTestImplementation rootProject.ext.supportTestRules
 
   lintChecks project(':sqlbrite-lint')
+
+  implementation rootProject.ext.checkerQualAndroid
+  annotationProcessor rootProject.ext.checker
+  checkerFrameworkAnnotatedJDK rootProject.ext.checkerJdk8
 }
 
 android {
+  buildTypes {
+    checkTypes {
+      javaCompileOptions.annotationProcessorOptions.classNames.add("org.checkerframework.checker.nullness.NullnessChecker")
+    }
+  }
+
   compileSdkVersion versions.compileSdk
 
   defaultConfig {
