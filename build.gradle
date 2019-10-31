@@ -57,9 +57,11 @@ ext {
   lintTests = "com.android.tools.lint:lint-tests:${versions.lint}"
 
   // Checker dependencies.
-  checkerQualAndroid = "org.checkerframework:checker-qual-android:2.10.0"
-  checker = "org.checkerframework:checker:2.10.0"
-  checkerJdk8 = "org.checkerframework:jdk8:2.10.0"
+  checkerFrameworkVersion = "2.11.1"
+  checkerQualAndroid = "org.checkerframework:checker-qual-android:${checkerFrameworkVersion}"
+  checker = "org.checkerframework:checker:${checkerFrameworkVersion}"
+  checkerJdk8 = "org.checkerframework:jdk8:${checkerFrameworkVersion}"
+  errorproneJavac = "com.google.errorprone:javac:9+181-r4173-1"
 }
 
 configurations {

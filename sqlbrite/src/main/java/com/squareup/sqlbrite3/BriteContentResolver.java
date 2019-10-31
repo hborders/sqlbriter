@@ -91,7 +91,7 @@ public final class BriteContentResolver {
    * @see ContentResolver#registerContentObserver(Uri, boolean, ContentObserver)
    */
   @CheckResult @NonNull
-  public QueryObservable createQuery(@NonNull final Uri uri, @Nullable final String[] projection,
+  public QueryObservable createQuery(@NonNull final Uri uri, @Nullable final String [] projection,
       @Nullable final String selection, @Nullable final String[] selectionArgs,
       @Nullable final String sortOrder, final boolean notifyForDescendents) {
     @NonNull final Query query = new Query() {

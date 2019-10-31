@@ -466,7 +466,7 @@ public final class BriteDatabase implements Closeable {
           String.valueOf(whereClause),
           Arrays.toString(whereArgs));
     }
-    final int rows = db.delete(table, nonnullify(whereClause), nonnullify(whereArgs));
+    final int rows = db.delete(table, whereClause, whereArgs);
 
     if (logging) log("DELETE affected %s %s", rows, rows != 1 ? "rows" : "row");
 
@@ -493,7 +493,7 @@ public final class BriteDatabase implements Closeable {
           table, values, String.valueOf(whereClause), Arrays.toString(whereArgs),
           conflictString(conflictAlgorithm));
     }
-    final int rows = db.update(table, conflictAlgorithm, values, nonnullify(whereClause), nonnullify(whereArgs));
+    final int rows = db.update(table, conflictAlgorithm, values, whereClause, whereArgs);
 
     if (logging) log("UPDATE affected %s %s", rows, rows != 1 ? "rows" : "row");
 
@@ -747,26 +747,6 @@ public final class BriteDatabase implements Closeable {
   void log(@NonNull String message, @NonNull Object... args) {
     if (args.length > 0) message = String.format(message, args);
     logger.log(message);
-  }
-
-  @NonNull
-  private static String nonnullify(@Nullable String string) {
-    if (string == null) {
-      return "";
-    } else {
-      return string;
-    }
-  }
-
-  @NonNull private static final String[] EMPTY_STRING_ARRAY = new String[0];
-
-  @NonNull
-  private static String[] nonnullify(@Nullable String[] strings) {
-    if (strings == null) {
-      return EMPTY_STRING_ARRAY;
-    } else {
-      return strings;
-    }
   }
 
   private static String conflictString(@ConflictAlgorithm int conflictAlgorithm) {

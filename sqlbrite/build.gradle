@@ -4,6 +4,9 @@ configurations {
   checkerFrameworkAnnotatedJDK {
     description = 'a copy of JDK classes with Checker Framework type qualifiers inserted'
   }
+  errorproneJavac {
+    description = 'required to run the Checker Framework.'
+  }
 }
 
 dependencies {
@@ -19,15 +22,21 @@ dependencies {
 
   lintChecks project(':sqlbrite-lint')
 
-  implementation rootProject.ext.checkerQualAndroid
+  compileOnly rootProject.ext.checkerQualAndroid
   annotationProcessor rootProject.ext.checker
   checkerFrameworkAnnotatedJDK rootProject.ext.checkerJdk8
+  errorproneJavac rootProject.ext.errorproneJavac
 }
 
 android {
   buildTypes {
     checkTypes {
-      javaCompileOptions.annotationProcessorOptions.classNames.add("org.checkerframework.checker.nullness.NullnessChecker")
+      javaCompileOptions.annotationProcessorOptions.
+              classNames.add("org.checkerframework.checker.nullness.NullnessChecker")
+      javaCompileOptions.annotationProcessorOptions.arguments.put("stubs", project.file('src/main/stubs').path)
+      javaCompileOptions.annotationProcessorOptions.arguments.put("stubWarnIfNotFound", null)
+      // You can pass options like so:
+      // javaCompileOptions.annotationProcessorOptions.arguments.put("warns", "")
     }
   }
 
@@ -64,6 +73,8 @@ gradle.projectsEvaluated {
       compile.options.compilerArgs += [
               "-Xbootclasspath/p:${configurations.checkerFrameworkAnnotatedJDK.asPath}"
       ]
+      options.fork = true
+      options.forkOptions.jvmArgs += ["-Xbootclasspath/p:${configurations.errorproneJavac.asPath}"]
     }
   }
 }
