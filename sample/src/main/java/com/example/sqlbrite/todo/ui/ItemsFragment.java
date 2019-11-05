@@ -87,7 +87,7 @@ public final class ItemsFragment extends Fragment {
     return fragment;
   }
 
-  @Inject BriteDatabase db;
+  @Inject BriteDatabase<Object> db;
 
   private Listener listener;
   private ItemsAdapter adapter;

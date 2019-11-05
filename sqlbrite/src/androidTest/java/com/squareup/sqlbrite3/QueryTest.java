@@ -43,7 +43,7 @@ import static com.squareup.sqlbrite3.TestDb.TABLE_EMPLOYEE;
 import static org.junit.Assert.fail;
 
 public final class QueryTest {
-  @Nullable private BriteDatabase db;
+  @Nullable private BriteDatabase<Object> db;
 
   @Before public void setUp() {
     @NonNull final Configuration configuration = Configuration.builder(
@@ -55,12 +55,12 @@ public final class QueryTest {
     @NonNull final Factory factory = new FrameworkSQLiteOpenHelperFactory();
     @NonNull final SupportSQLiteOpenHelper helper = factory.create(configuration);
 
-    @NonNull final SqlBrite sqlBrite = new SqlBrite.Builder().build();
+    @NonNull final SqlBrite<Object> sqlBrite = new SqlBrite.Builder<Object>().build();
     db = sqlBrite.wrapDatabaseHelper(helper, Schedulers.trampoline());
   }
 
   @Test public void mapToOne() {
-    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final Employee employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
         .lift(Query.mapToOne(MAPPER))
@@ -69,7 +69,7 @@ public final class QueryTest {
   }
 
   @Test public void mapToOneThrowsWhenMapperReturnsNull() {
-    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
         .lift(Query.mapToOne(new FunctionRR<Cursor, Employee>() {
@@ -83,7 +83,7 @@ public final class QueryTest {
   }
 
   @Test public void mapToOneThrowsOnMultipleRows() {
-    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final Observable<Employee> employees =
         db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 2") //
@@ -114,7 +114,7 @@ public final class QueryTest {
   }
 
   @Test public void mapToOneOrDefault() {
-    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final Employee employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
         .lift(Query.mapToOneOrDefault(
@@ -134,7 +134,7 @@ public final class QueryTest {
   }
 
   @Test public void mapToOneOrDefaultThrowsWhenMapperReturnsNull() {
-    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
         .lift(Query.mapToOneOrDefault(new FunctionRR<Cursor, Employee>() {
@@ -148,7 +148,7 @@ public final class QueryTest {
   }
 
   @Test public void mapToOneOrDefaultThrowsOnMultipleRows() {
-    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final Observable<Employee> employees =
         db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 2") //
@@ -181,7 +181,7 @@ public final class QueryTest {
   }
 
   @Test public void mapToList() {
-    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final List<Employee> employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
         .lift(Query.mapToList(MAPPER))
@@ -193,7 +193,7 @@ public final class QueryTest {
   }
 
   @Test public void mapToListEmptyWhenNoRows() {
-    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final List<Employee> employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " WHERE 1=2")
         .lift(Query.mapToList(MAPPER))
@@ -202,7 +202,7 @@ public final class QueryTest {
   }
 
   @Test public void mapToListThrowsWhenMapperReturnsNull() {
-    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final FunctionRR<Cursor, Employee> mapToNull = new FunctionRR<Cursor, Employee>() {
       private int count;
@@ -241,7 +241,7 @@ public final class QueryTest {
 
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.N)
   @Test public void mapToOptional() {
-    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
         .lift(Query.mapToOptional(MAPPER))
@@ -251,7 +251,7 @@ public final class QueryTest {
 
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.N)
   @Test public void mapToOptionalThrowsWhenMapperReturnsNull() {
-    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
         .lift(Query.mapToOptional(new FunctionRR<Cursor, Employee>() {
@@ -266,7 +266,7 @@ public final class QueryTest {
 
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.N)
   @Test public void mapToOptionalThrowsOnMultipleRows() {
-    @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
+    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 2") //
         .lift(Query.mapToOptional(MAPPER))

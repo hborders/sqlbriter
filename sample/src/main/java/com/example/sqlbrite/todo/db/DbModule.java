@@ -32,8 +32,8 @@ import timber.log.Timber;
 
 @Module
 public final class DbModule {
-  @NonNull @Provides @Singleton SqlBrite provideSqlBrite() {
-    return new SqlBrite.Builder()
+  @NonNull @Provides @Singleton SqlBrite<Object> provideSqlBrite() {
+    return new SqlBrite.Builder<Object>()
         .logger(new SqlBrite.Logger() {
           @Override public void log(@NonNull String message) {
             Timber.tag("Database").v(message);
@@ -42,15 +42,16 @@ public final class DbModule {
         .build();
   }
 
-    @NonNull @Provides @Singleton BriteDatabase provideDatabase(@NonNull SqlBrite sqlBrite,
-                                                                @NonNull Application application) {
+    @NonNull @Provides @Singleton
+    BriteDatabase<Object> provideDatabase(@NonNull SqlBrite<Object> sqlBrite,
+                                          @NonNull Application application) {
     Configuration configuration = Configuration.builder(application)
         .name("todo.db")
         .callback(new DbCallback())
         .build();
     Factory factory = new FrameworkSQLiteOpenHelperFactory();
     SupportSQLiteOpenHelper helper = factory.create(configuration);
-    BriteDatabase db = sqlBrite.wrapDatabaseHelper(helper, Schedulers.io());
+    BriteDatabase<Object> db = sqlBrite.wrapDatabaseHelper(helper, Schedulers.io());
     db.setLoggingEnabled(true);
     return db;
   }

@@ -50,7 +50,7 @@ public final class ListsFragment extends Fragment {
     return new ListsFragment();
   }
 
-  @Inject BriteDatabase db;
+  @Inject BriteDatabase<Object> db;
 
   private Listener listener;
   private ListsAdapter adapter;

@@ -7,7 +7,7 @@ interface SupportSQLiteDatabase extends Closeable {
   int delete(
     @NonNull String table,
     @Nullable String whereClause,
-    @Nullable Object @Nullable[] whereArgs
+    @Nullable Object @Nullable [] whereArgs
   );
   int update(
     @NonNull String table,

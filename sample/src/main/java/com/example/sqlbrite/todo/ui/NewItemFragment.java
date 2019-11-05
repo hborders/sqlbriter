@@ -55,7 +55,7 @@ public final class NewItemFragment extends DialogFragment {
 
   private final PublishSubject<String> createClicked = PublishSubject.create();
 
-  @Inject BriteDatabase db;
+  @Inject BriteDatabase<Object> db;
 
   private long getListId() {
     return getArguments().getLong(KEY_LIST_ID);

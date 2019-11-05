@@ -48,7 +48,7 @@ public final class NewListFragment extends DialogFragment {
 
   private final PublishSubject<String> createClicked = PublishSubject.create();
 
-  @Inject BriteDatabase db;
+  @Inject BriteDatabase<Object> db;
 
   @Override public void onAttach(@NonNull Context context) {
     super.onAttach(context);
