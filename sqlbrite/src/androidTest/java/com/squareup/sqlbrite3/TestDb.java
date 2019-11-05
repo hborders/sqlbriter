@@ -21,9 +21,11 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper;
 import android.content.ContentValues;
 import android.database.Cursor;
 import androidx.annotation.NonNull;
-import io.reactivex.functions.Function;
+
+import io.reactivex.functions.BiFunction;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Set;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_FAIL;
 import static com.squareup.sqlbrite3.TestDb.EmployeeTable.ID;
@@ -58,13 +60,22 @@ final class TestDb extends SupportSQLiteOpenHelper.Callback {
     @NonNull static final FunctionRR<Cursor, Employee> MAPPER = new FunctionRR<Cursor, Employee>() {
       @NonNull @Override public Employee applyRR(@NonNull Cursor cursor) {
         return new Employee( //
-            cursor.getString(cursor.getColumnIndexOrThrow(EmployeeTable.USERNAME)),
-            cursor.getString(cursor.getColumnIndexOrThrow(EmployeeTable.NAME)));
+                cursor.getString(cursor.getColumnIndexOrThrow(EmployeeTable.USERNAME)),
+                cursor.getString(cursor.getColumnIndexOrThrow(EmployeeTable.NAME)));
+      }
+    };
+    @NonNull static final BiFunction<Cursor, Set<String>, Employee> MARKED_MAPPER = new BiFunction<Cursor, Set<String>, Employee>() {
+      @NonNull @Override public Employee apply(@NonNull Cursor cursor, @NonNull Set<String> markers) {
+        return new Employee( //
+                cursor.getString(cursor.getColumnIndexOrThrow(EmployeeTable.USERNAME)),
+                cursor.getString(cursor.getColumnIndexOrThrow(EmployeeTable.NAME)));
       }
     };
 
+
     @Nullable final String username;
     @Nullable final String name;
+
 
     Employee(@Nullable String username, @Nullable String name) {
       this.username = username;
@@ -80,7 +91,8 @@ final class TestDb extends SupportSQLiteOpenHelper.Callback {
     }
 
     @Override public int hashCode() {
-      return (username == null ? 0 : username.hashCode()) * 17 + (name == null ? 0 : name.hashCode());
+      return (username == null ? 0 : username.hashCode()) +
+              (name == null ? 0 : name.hashCode()) * 17;
     }
 
     @Override public String toString() {

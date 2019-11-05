@@ -41,6 +41,8 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 /**
  * A lightweight wrapper around {@link ContentResolver} which allows for continuously observing
  * the result of a query. Create using a {@link SqlBrite} instance.
+ * Doesn't support {@link SqlBrite.MarkedQuery} because we don't control insert, update, delete
+ * operations.
  */
 public final class BriteContentResolver {
   @NonNull final Handler contentObserverHandler = new Handler(Looper.getMainLooper());

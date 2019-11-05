@@ -14,7 +14,7 @@ public final class SqlBriteArgCountDetectorTest {
             java(
                     "package com.squareup.sqlbrite3;\n" +
                             "\n" +
-                            "public final class BriteDatabase {\n" +
+                            "public final class BriteDatabase<M> {\n" +
                             "\n" +
                             "  public void query(String sql, Object... args) {\n" +
                             "  }\n" +
@@ -41,7 +41,7 @@ public final class SqlBriteArgCountDetectorTest {
                                 "    private static final String QUERY = \"SELECT name FROM table WHERE id = ?\";\n" +
                                 "\n" +
                                 "    public void test() {\n" +
-                                "      BriteDatabase db = new BriteDatabase();\n" +
+                                "      BriteDatabase<Object> db = new BriteDatabase<>();\n" +
                                 "      db.query(QUERY, \"id\");\n" +
                                 "    }\n" +
                                 "\n" +
@@ -66,7 +66,7 @@ public final class SqlBriteArgCountDetectorTest {
                                 "    private static final String QUERY = \"SELECT name FROM table WHERE id = ?\";\n" +
                                 "\n" +
                                 "    public void test() {\n" +
-                                "      BriteDatabase db = new BriteDatabase();\n" +
+                                "      BriteDatabase<Object> db = new BriteDatabase<>();\n" +
                                 "      db.query(query(), \"id\");\n" +
                                 "    }\n" +
                                 "    private String query() {\n" +
@@ -94,7 +94,7 @@ public final class SqlBriteArgCountDetectorTest {
                                 "    private static final String QUERY = \"SELECT name FROM table WHERE id = ?\";\n" +
                                 "\n" +
                                 "    public void test() {\n" +
-                                "      BriteDatabase db = new BriteDatabase();\n" +
+                                "      BriteDatabase<Object> db = new BriteDatabase<>();\n" +
                                 "      db.createQuery(\"table\", 42);\n" +
                                 "    }\n" +
                                 "\n" +
@@ -119,7 +119,7 @@ public final class SqlBriteArgCountDetectorTest {
                                 "    private static final String QUERY = \"SELECT name FROM table WHERE id = ?\";\n" +
                                 "\n" +
                                 "    public void test() {\n" +
-                                "      BriteDatabase db = new BriteDatabase();\n" +
+                                "      BriteDatabase<Object> db = new BriteDatabase<>();\n" +
                                 "      db.query(QUERY);\n" +
                                 "    }\n" +
                                 "\n" +
@@ -151,7 +151,7 @@ public final class SqlBriteArgCountDetectorTest {
                                 "    private static final String QUERY = \"SELECT name FROM table WHERE id = ?\";\n" +
                                 "\n" +
                                 "    public void test() {\n" +
-                                "      BriteDatabase db = new BriteDatabase();\n" +
+                                "      BriteDatabase<Object> db = new BriteDatabase<>();\n" +
                                 "      db.createQuery(\"table\", QUERY);\n" +
                                 "    }\n" +
                                 "\n" +
