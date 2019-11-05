@@ -47,6 +47,7 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT;
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_FAIL;
@@ -62,18 +63,23 @@ import static java.util.Collections.singletonList;
  * A lightweight wrapper around {@link SupportSQLiteOpenHelper} which allows for continuously
  * observing the result of a query. Create using a {@link SqlBrite} instance.
  */
-public final class BriteDatabase implements Closeable {
+public final class BriteDatabase<M> implements Closeable {
   @NonNull private final SupportSQLiteOpenHelper helper;
   @NonNull private final Logger logger;
   @NonNull private final ObservableTransformer<Query, Query> queryTransformer;
 
   // Package-private to avoid synthetic accessor method for 'transaction' instance.
-  @NonNull final ThreadLocal<@org.checkerframework.checker.nullness.qual.Nullable SqliteTransaction> transactions = new ThreadLocal<>();
+  @NonNull final ThreadLocal<@org.checkerframework.checker.nullness.qual.Nullable SqliteTransaction<M>> transactions = new ThreadLocal<>();
   @NonNull private final Subject<Set<String>> triggers = PublishSubject.create();
 
-  @NonNull private final Transaction transaction = new Transaction() {
-    @Override public void markSuccessful() {
-      if (logging) log("TXN SUCCESS %s", String.valueOf(transactions.get()));
+  @NonNull private final Transaction<M> transaction = new Transaction<M>() {
+    @Override public void markSuccessful(@NonNull M marker) {
+      @Nullable final SqliteTransaction<M> transaction = transactions.get();
+      if (transaction == null) {
+        throw new IllegalStateException("Not in transaction.");
+      }
+      if (logging) log("TXN SUCCESS %s, %s", String.valueOf(marker), String.valueOf(transaction));
+      transaction.marker = marker;
       getWritableDatabase().setTransactionSuccessful();
     }
 
@@ -86,11 +92,11 @@ public final class BriteDatabase implements Closeable {
     }
 
     @Override public void end() {
-      @Nullable final SqliteTransaction transaction = transactions.get();
+      @Nullable final SqliteTransaction<M> transaction = transactions.get();
       if (transaction == null) {
         throw new IllegalStateException("Not in transaction.");
       }
-      @Nullable final SqliteTransaction newTransaction = transaction.parent;
+      @Nullable final SqliteTransaction<M> newTransaction = transaction.parent;
       transactions.set(newTransaction);
       if (logging) log("TXN END %s", transaction);
       getWritableDatabase().endTransaction();
@@ -182,8 +188,8 @@ public final class BriteDatabase implements Closeable {
     return helper.getWritableDatabase();
   }
 
-  void sendTableTrigger(@NonNull Set<String> tables) {
-    @Nullable final SqliteTransaction transaction = transactions.get();
+  void sendTableTrigger(@NonNull Set<String> tables, @Nullable M marker) {
+    @Nullable final SqliteTransaction<M> transaction = transactions.get();
     if (transaction != null) {
       transaction.addAll(tables);
     } else {
@@ -200,7 +206,7 @@ public final class BriteDatabase implements Closeable {
    * <p>
    * Each call to {@code newTransaction} must be matched exactly by a call to
    * {@link Transaction#end()}. To mark a transaction as successful, call
-   * {@link Transaction#markSuccessful()} before calling {@link Transaction#end()}. If the
+   * {@link Transaction#markSuccessful(M)} before calling {@link Transaction#end()}. If the
    * transaction is not successful, or if any of its nested transactions were not successful, then
    * the entire transaction will be rolled back when the outermost transaction is ended.
    * <p>
@@ -230,7 +236,7 @@ public final class BriteDatabase implements Closeable {
    * @see SupportSQLiteDatabase#beginTransaction()
    */
   @CheckResult @NonNull
-  public Transaction newTransaction() {
+  public Transaction<M> newTransaction() {
     @NonNull final SqliteTransaction transaction = new SqliteTransaction(transactions.get());
     transactions.set(transaction);
     if (logging) log("TXN BEGIN %s", transaction);
@@ -247,7 +253,7 @@ public final class BriteDatabase implements Closeable {
    * <p>
    * Each call to {@code newNonExclusiveTransaction} must be matched exactly by a call to
    * {@link Transaction#end()}. To mark a transaction as successful, call
-   * {@link Transaction#markSuccessful()} before calling {@link Transaction#end()}. If the
+   * {@link Transaction#markSuccessful(M)} before calling {@link Transaction#end()}. If the
    * transaction is not successful, or if any of its nested transactions were not successful, then
    * the entire transaction will be rolled back when the outermost transaction is ended.
    * <p>
@@ -277,7 +283,7 @@ public final class BriteDatabase implements Closeable {
    * @see SupportSQLiteDatabase#beginTransactionNonExclusive()
    */
   @CheckResult @NonNull
-  public Transaction newNonExclusiveTransaction() {
+  public Transaction<M> newNonExclusiveTransaction() {
     @NonNull final SqliteTransaction transaction = new SqliteTransaction(transactions.get());
     transactions.set(transaction);
     if (logging) log("TXN BEGIN %s", transaction);
@@ -666,7 +672,7 @@ public final class BriteDatabase implements Closeable {
   }
 
   /** An in-progress database transaction. */
-  public interface Transaction extends Closeable {
+  public interface Transaction<M> extends Closeable {
     /**
      * End a transaction. See {@link #newTransaction()} for notes about how to use this and when
      * transactions are committed and rolled back.
@@ -682,14 +688,17 @@ public final class BriteDatabase implements Closeable {
      * situation too. If any errors are encountered between this and {@link #end()} the transaction
      * will still be committed.
      *
+     * @param marker A value that will be sent along with active queries to mark the results
+     *               as coming from this transaction.
+     *
      * @see SupportSQLiteDatabase#setTransactionSuccessful()
      */
     @WorkerThread
-    void markSuccessful();
+    void markSuccessful(@NonNull M marker);
 
     /**
      * Temporarily end the transaction to let other threads run. The transaction is assumed to be
-     * successful so far. Do not call {@link #markSuccessful()} before calling this. When this
+     * successful so far. Do not call {@link #markSuccessful(M)} before calling this. When this
      * returns a new transaction will have been created but not marked as successful. This assumes
      * that there are no nested transactions (newTransaction has only been called once) and will
      * throw an exception if that is not the case.
@@ -703,7 +712,7 @@ public final class BriteDatabase implements Closeable {
 
     /**
      * Temporarily end the transaction to let other threads run. The transaction is assumed to be
-     * successful so far. Do not call {@link #markSuccessful()} before calling this. When this
+     * successful so far. Do not call {@link #markSuccessful(M)} before calling this. When this
      * returns a new transaction will have been created but not marked as successful. This assumes
      * that there are no nested transactions (newTransaction has only been called once) and will
      * throw an exception if that is not the case.
@@ -768,12 +777,13 @@ public final class BriteDatabase implements Closeable {
     }
   }
 
-  static final class SqliteTransaction extends LinkedHashSet<String>
+  static final class SqliteTransaction<M> extends LinkedHashSet<String>
       implements SQLiteTransactionListener {
-    @Nullable final SqliteTransaction parent;
+    @Nullable final SqliteTransaction<M> parent;
     boolean commit;
+    @Nullable M marker;
 
-    SqliteTransaction(@Nullable SqliteTransaction parent) {
+    SqliteTransaction(@Nullable SqliteTransaction<M> parent) {
       this.parent = parent;
     }
 
