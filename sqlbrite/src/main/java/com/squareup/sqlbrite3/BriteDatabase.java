@@ -68,7 +68,7 @@ public final class BriteDatabase implements Closeable {
   @NonNull private final ObservableTransformer<Query, Query> queryTransformer;
 
   // Package-private to avoid synthetic accessor method for 'transaction' instance.
-  @NonNull final ThreadLocal<@org.checkerframework.checker.nullness.qual.Nullable SqliteTransaction> transactions = new ThreadLocal<>();
+  @NonNull final ThreadLocal<BriteOptional<SqliteTransaction>> transactions = new ThreadLocal<>();
   @NonNull private final Subject<Set<String>> triggers = PublishSubject.create();
 
   @NonNull private final Transaction transaction = new Transaction() {
@@ -86,12 +86,12 @@ public final class BriteDatabase implements Closeable {
     }
 
     @Override public void end() {
-      @Nullable final SqliteTransaction transaction = transactions.get();
+      @Nullable final SqliteTransaction transaction = BriteOptional.orElse(transactions.get(), null);
       if (transaction == null) {
         throw new IllegalStateException("Not in transaction.");
       }
       @Nullable final SqliteTransaction newTransaction = transaction.parent;
-      transactions.set(newTransaction);
+      transactions.set(BriteOptional.ofNullable(newTransaction));
       if (logging) log("TXN END %s", transaction);
       getWritableDatabase().endTransaction();
       // Send the triggers after ending the transaction in the DB.
@@ -106,8 +106,7 @@ public final class BriteDatabase implements Closeable {
   };
   @NonNull private final Consumer<Object> ensureNotInTransaction = new Consumer<Object>() {
     @Override public void accept(@NonNull Object ignored) throws Exception {
-      @Nullable final SqliteTransaction transaction = transactions.get();
-      if (transaction != null) {
+      if (!BriteOptional.isPresent(transactions.get())) {
         throw new IllegalStateException("Cannot subscribe to observable query in a transaction.");
       }
     }
@@ -183,7 +182,7 @@ public final class BriteDatabase implements Closeable {
   }
 
   void sendTableTrigger(@NonNull Set<String> tables) {
-    @Nullable final SqliteTransaction transaction = transactions.get();
+    @Nullable final SqliteTransaction transaction = BriteOptional.orElse(transactions.get(), null);
     if (transaction != null) {
       transaction.addAll(tables);
     } else {
@@ -231,8 +230,10 @@ public final class BriteDatabase implements Closeable {
    */
   @CheckResult @NonNull
   public Transaction newTransaction() {
-    @NonNull final SqliteTransaction transaction = new SqliteTransaction(transactions.get());
-    transactions.set(transaction);
+    @NonNull final SqliteTransaction transaction = new SqliteTransaction(
+            BriteOptional.orElse(transactions.get(), null)
+    );
+    transactions.set(BriteOptional.of(transaction));
     if (logging) log("TXN BEGIN %s", transaction);
     getWritableDatabase().beginTransactionWithListener(transaction);
 
@@ -278,8 +279,10 @@ public final class BriteDatabase implements Closeable {
    */
   @CheckResult @NonNull
   public Transaction newNonExclusiveTransaction() {
-    @NonNull final SqliteTransaction transaction = new SqliteTransaction(transactions.get());
-    transactions.set(transaction);
+    @NonNull final SqliteTransaction transaction = new SqliteTransaction(
+            BriteOptional.orElse(transactions.get(), null)
+    );
+    transactions.set(BriteOptional.of(transaction));
     if (logging) log("TXN BEGIN %s", transaction);
     getWritableDatabase().beginTransactionWithListenerNonExclusive(transaction);
 
@@ -379,7 +382,7 @@ public final class BriteDatabase implements Closeable {
 
   @CheckResult @NonNull
   private QueryObservable createQuery(DatabaseQuery query) {
-    @Nullable final SqliteTransaction transaction = transactions.get();
+    @Nullable final SqliteTransaction transaction = BriteOptional.orElse(transactions.get(), null);
     if (transaction != null) {
       throw new IllegalStateException("Cannot create observable query in transaction. "
           + "Use query() for a query inside a transaction.");
