@@ -378,7 +378,7 @@ public final class BriteDatabase implements Closeable {
   }
 
   @CheckResult @NonNull
-  private QueryObservable createQuery(DatabaseQuery query) {
+  private QueryObservable createQuery(@NonNull DatabaseQuery query) {
     @Nullable final SqliteTransaction transaction = transactions.get();
     if (transaction != null) {
       throw new IllegalStateException("Cannot create observable query in transaction. "
