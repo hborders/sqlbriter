@@ -128,7 +128,7 @@ public final class SqlBrite {
      * @param mapper Maps the current {@link Cursor} row to {@code T}. May not return null.
      */
     @CheckResult @NonNull //
-    public static <T> ObservableOperator<T, Query> mapToOne(@NonNull Function<Cursor, T> mapper) {
+    public static <T> ObservableOperator<T, Query> mapToOne(@NonNull FunctionRR<Cursor, T> mapper) {
       return new QueryToOneOperator<>(mapper, null);
     }
 
@@ -148,7 +148,7 @@ public final class SqlBrite {
     @SuppressWarnings("ConstantConditions") // Public API contract.
     @CheckResult @NonNull
     public static <T> ObservableOperator<T, Query> mapToOneOrDefault(
-        @NonNull Function<Cursor, T> mapper, @NonNull T defaultValue) {
+        @NonNull FunctionRR<Cursor, T> mapper, @NonNull T defaultValue) {
       if (defaultValue == null) throw new NullPointerException("defaultValue == null");
       return new QueryToOneOperator<>(mapper, defaultValue);
     }
@@ -168,7 +168,7 @@ public final class SqlBrite {
     @RequiresApi(Build.VERSION_CODES.N) //
     @CheckResult @NonNull //
     public static <T> ObservableOperator<Optional<T>, Query> mapToOptional(
-        @NonNull Function<Cursor, T> mapper) {
+        @NonNull FunctionRR<Cursor, T> mapper) {
       return new QueryToOptionalOperator<>(mapper);
     }
 
@@ -186,7 +186,7 @@ public final class SqlBrite {
      */
     @CheckResult @NonNull
     public static <T> ObservableOperator<List<T>, Query> mapToList(
-        @NonNull Function<Cursor, T> mapper) {
+        @NonNull FunctionRR<Cursor, T> mapper) {
       return new QueryToListOperator<>(mapper);
     }
 
@@ -226,14 +226,14 @@ public final class SqlBrite {
      * The resulting observable will be empty if {@code null} is returned from {@link #run()}.
      */
     @CheckResult @NonNull
-    public final <T> Observable<T> asRows(@NonNull final Function<Cursor, T> mapper) {
+    public final <T> Observable<T> asRows(@NonNull final FunctionRR<Cursor, T> mapper) {
       return Observable.create(new ObservableOnSubscribe<T>() {
         @Override public void subscribe(@NonNull ObservableEmitter<T> e) throws Exception {
           @Nullable final Cursor cursor = run();
           if (cursor != null) {
             try {
               while (cursor.moveToNext() && !e.isDisposed()) {
-                e.onNext(Objects.requireNonNull(mapper.apply(cursor)));
+                e.onNext(Objects.requireNonNull(mapper.applyRR(cursor)));
               }
             } finally {
               cursor.close();

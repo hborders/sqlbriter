@@ -66,10 +66,10 @@ public final class SqlBriteTest {
     @NonNull final Query query = new CursorQuery(cursor);
     @NonNull final AtomicInteger count = new AtomicInteger();
     //noinspection ResultOfMethodCallIgnored
-    query.asRows(new Function<Cursor, Name>() {
-      @Override public Name apply(Cursor cursor) throws Exception {
+    query.asRows(new FunctionRR<Cursor, Name>() {
+      @Override public Name applyRR(Cursor cursor) throws Exception {
         count.incrementAndGet();
-        return Name.MAP.apply(cursor);
+        return Name.MAP.applyRR(cursor);
       }
     }).take(1).blockingFirst();
     assertThat(count.get()).isEqualTo(1);
@@ -83,10 +83,10 @@ public final class SqlBriteTest {
     };
 
     @NonNull final AtomicInteger count = new AtomicInteger();
-    nully.asRows(new Function<Cursor, Name>() {
-      @NonNull @Override public Name apply(@NonNull Cursor cursor) throws Exception {
+    nully.asRows(new FunctionRR<Cursor, Name>() {
+      @NonNull @Override public Name applyRR(@NonNull Cursor cursor) throws Exception {
         count.incrementAndGet();
-        return Name.MAP.apply(cursor);
+        return Name.MAP.applyRR(cursor);
       }
     }).test().assertNoValues().assertComplete();
 
@@ -94,8 +94,8 @@ public final class SqlBriteTest {
   }
 
   static final class Name {
-    @NonNull static final Function<Cursor, Name> MAP = new Function<Cursor, Name>() {
-      @NonNull @Override public Name apply(@NonNull Cursor cursor) {
+    @NonNull static final FunctionRR<Cursor, Name> MAP = new FunctionRR<Cursor, Name>() {
+      @NonNull @Override public Name applyRR(@NonNull Cursor cursor) {
         return new Name( //
             cursor.getString(cursor.getColumnIndexOrThrow(FIRST_NAME)),
             cursor.getString(cursor.getColumnIndexOrThrow(LAST_NAME)));

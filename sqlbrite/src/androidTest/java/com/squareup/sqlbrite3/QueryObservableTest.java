@@ -35,8 +35,8 @@ public final class QueryObservableTest {
       }
     };
     new QueryObservable(Observable.just(query)) //
-        .mapToList(new Function<Cursor, Object>() {
-          @NonNull @Override public Object apply(@NonNull Cursor cursor) {
+        .mapToList(new FunctionRR<Cursor, Object>() {
+          @NonNull @Override public Object applyRR(@NonNull Cursor cursor) {
             throw new AssertionError("Must not be called");
           }
         }) //
@@ -56,8 +56,8 @@ public final class QueryObservableTest {
 
     @NonNull final IllegalStateException error = new IllegalStateException("test exception");
     new QueryObservable(Observable.just(query)) //
-        .mapToList(new Function<Cursor, Object>() {
-          @NonNull @Override public Object apply(@NonNull Cursor cursor) {
+        .mapToList(new FunctionRR<Cursor, Object>() {
+          @NonNull @Override public Object applyRR(@NonNull Cursor cursor) {
             throw error;
           }
         }) //

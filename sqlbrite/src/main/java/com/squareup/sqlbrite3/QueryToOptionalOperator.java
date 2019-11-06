@@ -24,16 +24,15 @@ import androidx.annotation.RequiresApi;
 import io.reactivex.ObservableOperator;
 import io.reactivex.Observer;
 import io.reactivex.exceptions.Exceptions;
-import io.reactivex.functions.Function;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.plugins.RxJavaPlugins;
 import java.util.Optional;
 
 @RequiresApi(Build.VERSION_CODES.N)
 final class QueryToOptionalOperator<T> implements ObservableOperator<Optional<T>, SqlBrite.Query> {
-  @NonNull private final Function<Cursor, T> mapper;
+  @NonNull private final FunctionRR<Cursor, T> mapper;
 
-  QueryToOptionalOperator(@NonNull Function<Cursor, T> mapper) {
+  QueryToOptionalOperator(@NonNull FunctionRR<Cursor, T> mapper) {
     this.mapper = mapper;
   }
 
@@ -44,9 +43,9 @@ final class QueryToOptionalOperator<T> implements ObservableOperator<Optional<T>
 
   static final class MappingObserver<T> extends DisposableObserver<SqlBrite.Query> {
     @NonNull private final Observer<? super Optional<T>> downstream;
-    @NonNull private final Function<Cursor, T> mapper;
+    @NonNull private final FunctionRR<Cursor, T> mapper;
 
-    MappingObserver(@NonNull Observer<? super Optional<T>> downstream, @NonNull Function<Cursor, T> mapper) {
+    MappingObserver(@NonNull Observer<? super Optional<T>> downstream, @NonNull FunctionRR<Cursor, T> mapper) {
       this.downstream = downstream;
       this.mapper = mapper;
     }
@@ -62,7 +61,10 @@ final class QueryToOptionalOperator<T> implements ObservableOperator<Optional<T>
         if (cursor != null) {
           try {
             if (cursor.moveToNext()) {
-              item = mapper.apply(cursor);
+              item = mapper.applyRR(cursor);
+              // even though the type system should make this impossible,
+              // Java doesn't always check nullability annotations,
+              // so leave this in just in case our clients don't follow the rules.
               if (item == null) {
                 downstream.onError(new NullPointerException("QueryToOne mapper returned null"));
                 return;

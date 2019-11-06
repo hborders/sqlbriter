@@ -55,8 +55,8 @@ final class TestDb extends SupportSQLiteOpenHelper.Callback {
   }
 
   static final class Employee {
-    @NonNull static final Function<Cursor, Employee> MAPPER = new Function<Cursor, Employee>() {
-      @NonNull @Override public Employee apply(@NonNull Cursor cursor) {
+    @NonNull static final FunctionRR<Cursor, Employee> MAPPER = new FunctionRR<Cursor, Employee>() {
+      @NonNull @Override public Employee applyRR(@NonNull Cursor cursor) {
         return new Employee( //
             cursor.getString(cursor.getColumnIndexOrThrow(EmployeeTable.USERNAME)),
             cursor.getString(cursor.getColumnIndexOrThrow(EmployeeTable.NAME)));

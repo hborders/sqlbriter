@@ -73,8 +73,8 @@ public final class QueryTest {
     @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
-        .lift(Query.mapToOne(new Function<Cursor, Employee>() {
-          @Nullable @Override public Employee apply(@NonNull Cursor cursor) throws Exception {
+        .lift(Query.mapToOne(new FunctionRR<Cursor, Employee>() {
+          @NonNull @Override public Employee applyRR(@NonNull Cursor cursor) throws Exception {
             return null;
           }
         }))
@@ -138,8 +138,8 @@ public final class QueryTest {
     @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
-        .lift(Query.mapToOneOrDefault(new Function<Cursor, Employee>() {
-          @Nullable @Override public Employee apply(@NonNull Cursor cursor) throws Exception {
+        .lift(Query.mapToOneOrDefault(new FunctionRR<Cursor, Employee>() {
+          @NonNull @Override public Employee applyRR(@NonNull Cursor cursor) throws Exception {
             return null;
           }
         }, new Employee("fred", "Fred Frederson")))
@@ -202,25 +202,26 @@ public final class QueryTest {
     assertThat(employees).isEmpty();
   }
 
-  // TODO Remove this test and add a test that throws when mapper returns null
-  @Test public void mapToListReturnsNullOnMapperNull() {
+  @Test public void mapToListThrowsWhenMapperReturnsNull() {
     @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
 
-    @NonNull final Function<Cursor, Employee> mapToNull = new Function<Cursor, Employee>() {
+    @NonNull final FunctionRR<Cursor, Employee> mapToNull = new FunctionRR<Cursor, Employee>() {
       private int count;
 
-      @Nullable @Override public Employee apply(@NonNull Cursor cursor) throws Exception {
-        return count++ == 2 ? null : MAPPER.apply(cursor);
+      @NonNull @Override public Employee applyRR(@NonNull Cursor cursor) throws Exception {
+        return null;
       }
     };
-    @NonNull final List<Employee> employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES) //
-            .lift(Query.mapToList(mapToNull)) //
-            .blockingFirst();
 
-    assertThat(employees).containsExactly(
-        new Employee("alice", "Alice Allison"),
-        new Employee("bob", "Bob Bobberson"),
-        null);
+    try {
+      //noinspection ResultOfMethodCallIgnored
+      db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES) //
+              .lift(Query.mapToList(mapToNull)) //
+              .blockingFirst();
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessageThat().isEqualTo("QueryToList mapper returned null");
+    }
   }
 
   @Test public void mapToListIgnoresNullCursor() {
@@ -254,8 +255,8 @@ public final class QueryTest {
     @NonNull final BriteDatabase db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
-        .lift(Query.mapToOptional(new Function<Cursor, Employee>() {
-          @Override public Employee apply(Cursor cursor) throws Exception {
+        .lift(Query.mapToOptional(new FunctionRR<Cursor, Employee>() {
+          @NonNull @Override public Employee applyRR(@NonNull Cursor cursor) throws Exception {
             return null;
           }
         }))
