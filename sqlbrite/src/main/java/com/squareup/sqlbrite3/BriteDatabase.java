@@ -325,21 +325,21 @@ public final class BriteDatabase<M> implements Closeable {
    * @see SupportSQLiteDatabase#query(String, Object[])
    */
   @CheckResult @NonNull
-  public QueryObservable createQuery(@NonNull final String table, @Nullable M marker,
+  public QueryObservable createQuery(@NonNull final String table,
                                      @NonNull String sql, @NonNull Object... args) {
-    return createQuery(new DatabaseQuery<>(singletonList(table), marker, new SimpleSQLiteQuery(sql, args)));
+    return createQuery(singletonList(table), new SimpleSQLiteQuery(sql, args));
   }
 
   /**
-   * See {@link #createQuery(String, M, String, Object...)} for usage. This overload allows for
+   * See {@link #createQuery(String, String, Object...)} for usage. This overload allows for
    * monitoring multiple tables for changes.
    *
    * @see SupportSQLiteDatabase#query(String, Object[])
    */
   @CheckResult @NonNull
-  public QueryObservable createQuery(@NonNull final Iterable<String> tables, @Nullable M marker,
+  public QueryObservable createQuery(@NonNull final Iterable<String> tables,
                                      @NonNull String sql, @NonNull Object... args) {
-    return createQuery(new DatabaseQuery<>(tables, marker, new SimpleSQLiteQuery(sql, args)));
+    return createQuery(tables, new SimpleSQLiteQuery(sql, args));
   }
 
   /**
@@ -366,39 +366,34 @@ public final class BriteDatabase<M> implements Closeable {
    * @see SupportSQLiteDatabase#query(SupportSQLiteQuery)
    */
   @CheckResult @NonNull
-  public QueryObservable createQuery(@NonNull final String table, @Nullable M marker,
+  public QueryObservable createQuery(@NonNull final String table,
       @NonNull SupportSQLiteQuery query) {
-    return createQuery(new DatabaseQuery<>(singletonList(table), marker, query));
+    return createQuery(singletonList(table), query);
   }
 
   /**
-   * See {@link #createQuery(String, M, SupportSQLiteQuery)} for usage. This overload allows for
+   * See {@link #createQuery(String, SupportSQLiteQuery)} for usage. This overload allows for
    * monitoring multiple tables for changes.
    *
    * @see SupportSQLiteDatabase#query(SupportSQLiteQuery)
    */
   @CheckResult @NonNull
-  public QueryObservable createQuery(@NonNull final Iterable<String> tables, @Nullable M marker,
+  public QueryObservable createQuery(@NonNull final Iterable<String> tables,
       @NonNull SupportSQLiteQuery query) {
-    return createQuery(new DatabaseQuery<>(tables, marker, query));
-  }
-
-  @CheckResult @NonNull
-  private QueryObservable createQuery(@NonNull DatabaseQuery<M> query) {
     @Nullable final SqliteTransaction transaction = transactions.get();
     if (transaction != null) {
       throw new IllegalStateException("Cannot create observable query in transaction. "
-          + "Use query() for a query inside a transaction.");
+              + "Use query() for a query inside a transaction.");
     }
 
-    triggers //
-        .filter(query) // DatabaseQuery filters triggers to on tables we care about.
-        .map(query) // DatabaseQuery maps to itself to save an allocation.
-        .startWith(query) //
-        .observeOn(scheduler) //
-        .compose(queryTransformer) // Apply the user's query transformer.
-        .doOnSubscribe(ensureNotInTransaction)
-        .to(QUERY_OBSERVABLE);
+    return triggers //
+            .filter(new TriggerFilter(tables)) // TriggerFilter filters triggers to on tables we care about.
+            .map(new TriggerToQueryFunction(tables, query)) // TriggerToQueryFunction maps to a new MarkedQuery to capture the marker.
+            .startWith(new MarkedQuery(null, tables, query)) // No marker for the initial query
+            .observeOn(scheduler) //
+            .compose(queryTransformer) // Apply the user's query transformer.
+            .doOnSubscribe(ensureNotInTransaction)
+            .to(QUERY_OBSERVABLE);
   }
 
   /**
@@ -442,8 +437,8 @@ public final class BriteDatabase<M> implements Closeable {
     @NonNull final SupportSQLiteDatabase db = getWritableDatabase();
 
     if (logging) {
-      log("INSERT\n  table: %s\n  marker: %s\n  values: %s\n  conflictAlgorithm: %s", table, values,
-          conflictString(conflictAlgorithm));
+      log("INSERT\n  table: %s\n  marker: %s\n  values: %s\n  conflictAlgorithm: %s",
+          table, marker, values, conflictString(conflictAlgorithm));
     }
     final long rowId = db.insert(table, conflictAlgorithm, values);
 
@@ -468,7 +463,9 @@ public final class BriteDatabase<M> implements Closeable {
     @NonNull final SupportSQLiteDatabase db = getWritableDatabase();
 
     if (logging) {
-      log("DELETE\n  table: %s\n  marker: %s\n  whereClause: %s\n  whereArgs: %s", table,
+      log("DELETE\n  table: %s\n  marker: %s\n  whereClause: %s\n  whereArgs: %s",
+          table,
+          marker,
           String.valueOf(whereClause),
           Arrays.toString(whereArgs));
     }
@@ -496,7 +493,7 @@ public final class BriteDatabase<M> implements Closeable {
 
     if (logging) {
       log("UPDATE\n  table: %s\n  marker: %s\n  values: %s\n  whereClause: %s\n  whereArgs: %s\n  conflictAlgorithm: %s",
-          table, values, String.valueOf(whereClause), Arrays.toString(whereArgs),
+          table, marker, values, String.valueOf(whereClause), Arrays.toString(whereArgs),
           conflictString(conflictAlgorithm));
     }
     final int rows = db.update(table, conflictAlgorithm, values, whereClause, whereArgs);
@@ -841,17 +838,50 @@ public final class BriteDatabase<M> implements Closeable {
     }
   }
 
-  final class DatabaseQuery<M> extends Query
-      implements Function<Trigger, Query>, Predicate<Trigger> {
+  final class TriggerFilter implements Predicate<Trigger<M>> {
     @NonNull private final Iterable<String> tables;
-    @Nullable private final M marker;
+
+    TriggerFilter(@NonNull Iterable<String> tables) {
+      this.tables = tables;
+    }
+
+    @Override public boolean test(@NonNull Trigger<M> trigger) {
+      for (String table : tables) {
+        if (trigger.tables.contains(table)) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
+
+  final class TriggerToQueryFunction implements Function<Trigger<M>, Query<M>> {
+    @NonNull private final Iterable<String> tables;
     @NonNull private final SupportSQLiteQuery query;
 
-    DatabaseQuery(@NonNull Iterable<String> tables,
-                  @Nullable M marker,
-                  @NonNull SupportSQLiteQuery query) {
+    TriggerToQueryFunction(@NonNull Iterable<String> tables, @NonNull SupportSQLiteQuery query) {
       this.tables = tables;
-      this.marker = marker;
+      this.query = query;
+    }
+
+    @NonNull @Override public String toString() {
+      return query.getSql();
+    }
+
+    @NonNull @Override public Query<M> apply(@NonNull Trigger<M> trigger) {
+      return new MarkedQuery(trigger.marker, tables, query);
+    }
+  }
+
+  final class MarkedQuery extends Query<M> {
+    @NonNull private final Iterable<String> tables;
+    @NonNull private final SupportSQLiteQuery query;
+
+    MarkedQuery(@Nullable M marker,
+                @NonNull Iterable<String> tables,
+                @NonNull SupportSQLiteQuery query) {
+      super(marker);
+      this.tables = tables;
       this.query = query;
     }
 
@@ -863,33 +893,11 @@ public final class BriteDatabase<M> implements Closeable {
       @Nullable final Cursor cursor = getReadableDatabase().query(query);
 
       if (logging) {
-        log("QUERY\n  tables: %s\n  sql: %s", tables, indentSql(query.getSql()));
+        log("QUERY\n  tables: %s\n  marker: %s\n  sql: %s",
+                tables, String.valueOf(marker), indentSql(query.getSql()));
       }
 
       return cursor;
-    }
-
-    @NonNull @Override public String toString() {
-      return query.getSql();
-    }
-
-    @NonNull @Override public Query apply(@NonNull Trigger ignored) {
-      return this;
-    }
-
-    @Override public boolean test(@NonNull Trigger trigger) {
-      for (String table : tables) {
-        if (trigger.tables.contains(table)) {
-          if (marker != null) {
-            if (marker.equals(trigger.marker)) {
-              return true;
-            }
-          } else {
-            return true;
-          }
-        }
-      }
-      return false;
     }
   }
 }

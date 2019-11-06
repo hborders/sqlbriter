@@ -114,7 +114,13 @@ public final class SqlBrite {
   }
 
   /** An executable query. */
-  public static abstract class Query {
+  public static abstract class Query<M> {
+    @Nullable public final M marker;
+
+    public Query(@Nullable M marker) {
+      this.marker = marker;
+    }
+
     /**
      * Creates an {@linkplain ObservableOperator operator} which transforms a query returning a
      * single row to a {@code T} using {@code mapper}. Use with {@link Observable#lift}.
@@ -188,6 +194,15 @@ public final class SqlBrite {
     public static <T> ObservableOperator<List<T>, Query> mapToList(
         @NonNull FunctionRR<Cursor, T> mapper) {
       return new QueryToListOperator<>(mapper);
+    }
+
+    /**
+     * Exists just for a method reference. You should probably use {@link #marker}
+     * @return the {@link #marker}
+     */
+    @CheckResult @Nullable
+    public final M getMarker() {
+      return marker;
     }
 
     /**
