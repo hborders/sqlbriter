@@ -47,7 +47,6 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT;
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_FAIL;
@@ -70,7 +69,7 @@ public final class BriteDatabase<M> implements Closeable {
 
   // Package-private to avoid synthetic accessor method for 'transaction' instance.
   @NonNull final ThreadLocal<@org.checkerframework.checker.nullness.qual.Nullable SqliteTransaction<M>> transactions = new ThreadLocal<>();
-  @NonNull private final Subject<Set<String>> triggers = PublishSubject.create();
+  @NonNull private final Subject<Trigger<M>> triggers = PublishSubject.create();
 
   @NonNull private final Transaction<M> transaction = new Transaction<M>() {
     @Override public void markSuccessful(@NonNull M marker) {
@@ -102,7 +101,8 @@ public final class BriteDatabase<M> implements Closeable {
       getWritableDatabase().endTransaction();
       // Send the triggers after ending the transaction in the DB.
       if (transaction.commit) {
-        sendTableTrigger(transaction);
+        @NonNull final M marker = Objects.requireNonNull(transaction.marker);
+        sendTableTrigger(transaction, marker);
       }
     }
 
@@ -188,13 +188,13 @@ public final class BriteDatabase<M> implements Closeable {
     return helper.getWritableDatabase();
   }
 
-  void sendTableTrigger(@NonNull Set<String> tables, @Nullable M marker) {
+  void sendTableTrigger(@NonNull Set<String> tables, @NonNull M marker) {
     @Nullable final SqliteTransaction<M> transaction = transactions.get();
     if (transaction != null) {
       transaction.addAll(tables);
     } else {
       if (logging) log("TRIGGER %s", tables);
-      triggers.onNext(tables);
+      triggers.onNext(new Trigger<>(tables, marker));
     }
   }
 
@@ -325,21 +325,21 @@ public final class BriteDatabase<M> implements Closeable {
    * @see SupportSQLiteDatabase#query(String, Object[])
    */
   @CheckResult @NonNull
-  public QueryObservable createQuery(@NonNull final String table, @NonNull String sql,
-      @NonNull Object... args) {
-    return createQuery(new DatabaseQuery(singletonList(table), new SimpleSQLiteQuery(sql, args)));
+  public QueryObservable createQuery(@NonNull final String table, @Nullable M marker,
+                                     @NonNull String sql, @NonNull Object... args) {
+    return createQuery(new DatabaseQuery<>(singletonList(table), marker, new SimpleSQLiteQuery(sql, args)));
   }
 
   /**
-   * See {@link #createQuery(String, String, Object...)} for usage. This overload allows for
+   * See {@link #createQuery(String, M, String, Object...)} for usage. This overload allows for
    * monitoring multiple tables for changes.
    *
    * @see SupportSQLiteDatabase#query(String, Object[])
    */
   @CheckResult @NonNull
-  public QueryObservable createQuery(@NonNull final Iterable<String> tables, @NonNull String sql,
-      @NonNull Object... args) {
-    return createQuery(new DatabaseQuery(tables, new SimpleSQLiteQuery(sql, args)));
+  public QueryObservable createQuery(@NonNull final Iterable<String> tables, @Nullable M marker,
+                                     @NonNull String sql, @NonNull Object... args) {
+    return createQuery(new DatabaseQuery<>(tables, marker, new SimpleSQLiteQuery(sql, args)));
   }
 
   /**
@@ -366,32 +366,32 @@ public final class BriteDatabase<M> implements Closeable {
    * @see SupportSQLiteDatabase#query(SupportSQLiteQuery)
    */
   @CheckResult @NonNull
-  public QueryObservable createQuery(@NonNull final String table,
+  public QueryObservable createQuery(@NonNull final String table, @Nullable M marker,
       @NonNull SupportSQLiteQuery query) {
-    return createQuery(new DatabaseQuery(singletonList(table), query));
+    return createQuery(new DatabaseQuery<>(singletonList(table), marker, query));
   }
 
   /**
-   * See {@link #createQuery(String, SupportSQLiteQuery)} for usage. This overload allows for
+   * See {@link #createQuery(String, M, SupportSQLiteQuery)} for usage. This overload allows for
    * monitoring multiple tables for changes.
    *
    * @see SupportSQLiteDatabase#query(SupportSQLiteQuery)
    */
   @CheckResult @NonNull
-  public QueryObservable createQuery(@NonNull final Iterable<String> tables,
+  public QueryObservable createQuery(@NonNull final Iterable<String> tables, @Nullable M marker,
       @NonNull SupportSQLiteQuery query) {
-    return createQuery(new DatabaseQuery(tables, query));
+    return createQuery(new DatabaseQuery<>(tables, marker, query));
   }
 
   @CheckResult @NonNull
-  private QueryObservable createQuery(@NonNull DatabaseQuery query) {
+  private QueryObservable createQuery(@NonNull DatabaseQuery<M> query) {
     @Nullable final SqliteTransaction transaction = transactions.get();
     if (transaction != null) {
       throw new IllegalStateException("Cannot create observable query in transaction. "
           + "Use query() for a query inside a transaction.");
     }
 
-    return triggers //
+    triggers //
         .filter(query) // DatabaseQuery filters triggers to on tables we care about.
         .map(query) // DatabaseQuery maps to itself to save an allocation.
         .startWith(query) //
@@ -437,12 +437,12 @@ public final class BriteDatabase<M> implements Closeable {
    * @see SupportSQLiteDatabase#insert(String, int, ContentValues)
    */
   @WorkerThread
-  public long insert(@NonNull String table, @ConflictAlgorithm int conflictAlgorithm,
+  public long insert(@NonNull String table, @NonNull M marker, @ConflictAlgorithm int conflictAlgorithm,
       @NonNull ContentValues values) {
     @NonNull final SupportSQLiteDatabase db = getWritableDatabase();
 
     if (logging) {
-      log("INSERT\n  table: %s\n  values: %s\n  conflictAlgorithm: %s", table, values,
+      log("INSERT\n  table: %s\n  marker: %s\n  values: %s\n  conflictAlgorithm: %s", table, values,
           conflictString(conflictAlgorithm));
     }
     final long rowId = db.insert(table, conflictAlgorithm, values);
@@ -451,7 +451,7 @@ public final class BriteDatabase<M> implements Closeable {
 
     if (rowId != -1) {
       // Only send a table trigger if the insert was successful.
-      sendTableTrigger(Collections.singleton(table));
+      sendTableTrigger(Collections.singleton(table), marker);
     }
     return rowId;
   }
@@ -463,12 +463,12 @@ public final class BriteDatabase<M> implements Closeable {
    * @see SupportSQLiteDatabase#delete(String, String, Object[])
    */
   @WorkerThread
-  public int delete(@NonNull String table, @Nullable String whereClause,
+  public int delete(@NonNull String table, @NonNull M marker, @Nullable String whereClause,
       @Nullable String... whereArgs) {
     @NonNull final SupportSQLiteDatabase db = getWritableDatabase();
 
     if (logging) {
-      log("DELETE\n  table: %s\n  whereClause: %s\n  whereArgs: %s", table,
+      log("DELETE\n  table: %s\n  marker: %s\n  whereClause: %s\n  whereArgs: %s", table,
           String.valueOf(whereClause),
           Arrays.toString(whereArgs));
     }
@@ -478,7 +478,7 @@ public final class BriteDatabase<M> implements Closeable {
 
     if (rows > 0) {
       // Only send a table trigger if rows were affected.
-      sendTableTrigger(Collections.singleton(table));
+      sendTableTrigger(Collections.singleton(table), marker);
     }
     return rows;
   }
@@ -490,12 +490,12 @@ public final class BriteDatabase<M> implements Closeable {
    * @see SupportSQLiteDatabase#update(String, int, ContentValues, String, Object[])
    */
   @WorkerThread
-  public int update(@NonNull String table, @ConflictAlgorithm int conflictAlgorithm,
+  public int update(@NonNull String table, @NonNull M marker, @ConflictAlgorithm int conflictAlgorithm,
       @NonNull ContentValues values, @Nullable String whereClause, @Nullable String... whereArgs) {
     @NonNull final SupportSQLiteDatabase db = getWritableDatabase();
 
     if (logging) {
-      log("UPDATE\n  table: %s\n  values: %s\n  whereClause: %s\n  whereArgs: %s\n  conflictAlgorithm: %s",
+      log("UPDATE\n  table: %s\n  marker: %s\n  values: %s\n  whereClause: %s\n  whereArgs: %s\n  conflictAlgorithm: %s",
           table, values, String.valueOf(whereClause), Arrays.toString(whereArgs),
           conflictString(conflictAlgorithm));
     }
@@ -505,7 +505,7 @@ public final class BriteDatabase<M> implements Closeable {
 
     if (rows > 0) {
       // Only send a table trigger if rows were affected.
-      sendTableTrigger(Collections.singleton(table));
+      sendTableTrigger(Collections.singleton(table), marker);
     }
     return rows;
   }
@@ -560,20 +560,20 @@ public final class BriteDatabase<M> implements Closeable {
    * @see SupportSQLiteDatabase#execSQL(String)
    */
   @WorkerThread
-  public void executeAndTrigger(@NonNull String table, @NonNull String sql) {
-    executeAndTrigger(Collections.singleton(table), sql);
+  public void executeAndTrigger(@NonNull String table, @NonNull M marker, @NonNull String sql) {
+    executeAndTrigger(Collections.singleton(table), marker, sql);
   }
 
   /**
-   * See {@link #executeAndTrigger(String, String)} for usage. This overload allows for triggering multiple tables.
+   * See {@link #executeAndTrigger(String, M, String)} for usage. This overload allows for triggering multiple tables.
    *
-   * @see BriteDatabase#executeAndTrigger(String, String)
+   * @see BriteDatabase#executeAndTrigger(String, M, String)
    */
   @WorkerThread
-  public void executeAndTrigger(@NonNull Set<String> tables, @NonNull String sql) {
+  public void executeAndTrigger(@NonNull Set<String> tables, @NonNull M marker, @NonNull String sql) {
     execute(sql);
 
-    sendTableTrigger(tables);
+    sendTableTrigger(tables, marker);
   }
 
   /**
@@ -586,22 +586,22 @@ public final class BriteDatabase<M> implements Closeable {
    * @see SupportSQLiteDatabase#execSQL(String, Object[])
    */
   @WorkerThread
-  public void executeAndTrigger(@NonNull String table, @NonNull String sql,
+  public void executeAndTrigger(@NonNull String table, @NonNull M marker, @NonNull String sql,
                                 @NonNull Object... args) {
-    executeAndTrigger(Collections.singleton(table), sql, args);
+    executeAndTrigger(Collections.singleton(table), marker, sql, args);
   }
 
   /**
-   * See {@link #executeAndTrigger(String, String, Object...)} for usage. This overload allows for triggering multiple tables.
+   * See {@link #executeAndTrigger(String, M, String, Object...)} for usage. This overload allows for triggering multiple tables.
    *
-   * @see BriteDatabase#executeAndTrigger(String, String, Object...)
+   * @see BriteDatabase#executeAndTrigger(String, M, String, Object...)
    */
   @WorkerThread
-  public void executeAndTrigger(@NonNull Set<String> tables, @NonNull String sql,
+  public void executeAndTrigger(@NonNull Set<String> tables, @NonNull M marker, @NonNull String sql,
                                 @NonNull Object... args) {
     execute(sql, args);
 
-    sendTableTrigger(tables);
+    sendTableTrigger(tables, marker);
   }
 
   /**
@@ -614,25 +614,26 @@ public final class BriteDatabase<M> implements Closeable {
    * @see SupportSQLiteStatement#executeUpdateDelete()
    */
   @WorkerThread
-  public int executeUpdateDelete(@NonNull String table, @NonNull SupportSQLiteStatement statement) {
-    return executeUpdateDelete(Collections.singleton(table), statement);
+  public int executeUpdateDelete(@NonNull String table, @NonNull M marker,
+                                 @NonNull SupportSQLiteStatement statement) {
+    return executeUpdateDelete(Collections.singleton(table), marker, statement);
   }
 
   /**
-   * See {@link #executeUpdateDelete(String, SupportSQLiteStatement)} for usage. This overload
+   * See {@link #executeUpdateDelete(String, M, SupportSQLiteStatement)} for usage. This overload
    * allows for triggering multiple tables.
    *
-   * @see BriteDatabase#executeUpdateDelete(String, SupportSQLiteStatement)
+   * @see BriteDatabase#executeUpdateDelete(String, M, SupportSQLiteStatement)
    */
   @WorkerThread
-  public int executeUpdateDelete(@NonNull Set<String> tables,
+  public int executeUpdateDelete(@NonNull Set<String> tables, @NonNull M marker,
                                  @NonNull SupportSQLiteStatement statement) {
     if (logging) log("EXECUTE\n %s", statement);
 
     final int rows = statement.executeUpdateDelete();
     if (rows > 0) {
       // Only send a table trigger if rows were affected.
-      sendTableTrigger(tables);
+      sendTableTrigger(tables, marker);
     }
     return rows;
   }
@@ -648,25 +649,26 @@ public final class BriteDatabase<M> implements Closeable {
    * @see SupportSQLiteStatement#executeInsert()
    */
   @WorkerThread
-  public long executeInsert(@NonNull String table, @NonNull SupportSQLiteStatement statement) {
-    return executeInsert(Collections.singleton(table), statement);
+  public long executeInsert(@NonNull String table, @NonNull M marker,
+                            @NonNull SupportSQLiteStatement statement) {
+    return executeInsert(Collections.singleton(table), marker, statement);
   }
 
   /**
-   * See {@link #executeInsert(String, SupportSQLiteStatement)} for usage. This overload allows for
+   * See {@link #executeInsert(String, M, SupportSQLiteStatement)} for usage. This overload allows for
    * triggering multiple tables.
    *
-   * @see BriteDatabase#executeInsert(String, SupportSQLiteStatement)
+   * @see BriteDatabase#executeInsert(String, M, SupportSQLiteStatement)
    */
   @WorkerThread
-  public long executeInsert(@NonNull Set<String> tables,
+  public long executeInsert(@NonNull Set<String> tables, @NonNull M marker,
                             @NonNull SupportSQLiteStatement statement) {
     if (logging) log("EXECUTE\n %s", statement);
 
     final long rowId = statement.executeInsert();
     if (rowId != -1) {
       // Only send a table trigger if the insert was successful.
-      sendTableTrigger(tables);
+      sendTableTrigger(tables, marker);
     }
     return rowId;
   }
@@ -777,6 +779,42 @@ public final class BriteDatabase<M> implements Closeable {
     }
   }
 
+  static final class Trigger<M> {
+    @NonNull final Set<String> tables;
+    @NonNull final M marker;
+
+    Trigger(@NonNull Set<String> tables, @NonNull M marker) {
+      this.tables = tables;
+      this.marker = marker;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      Trigger<?> trigger = (Trigger<?>) o;
+
+      if (!tables.equals(trigger.tables)) return false;
+      return marker.equals(trigger.marker);
+    }
+
+    @Override
+    public int hashCode() {
+      int result = tables.hashCode();
+      result = 31 * result + marker.hashCode();
+      return result;
+    }
+
+    @Override
+    public String toString() {
+      return "Trigger[" +
+              "tables=" + tables +
+              ", marker=" + marker +
+              ']';
+    }
+  }
+
   static final class SqliteTransaction<M> extends LinkedHashSet<String>
       implements SQLiteTransactionListener {
     @Nullable final SqliteTransaction<M> parent;
@@ -803,13 +841,17 @@ public final class BriteDatabase<M> implements Closeable {
     }
   }
 
-  final class DatabaseQuery extends Query
-      implements Function<Set<String>, Query>, Predicate<Set<String>> {
+  final class DatabaseQuery<M> extends Query
+      implements Function<Trigger, Query>, Predicate<Trigger> {
     @NonNull private final Iterable<String> tables;
+    @Nullable private final M marker;
     @NonNull private final SupportSQLiteQuery query;
 
-    DatabaseQuery(@NonNull Iterable<String> tables, @NonNull SupportSQLiteQuery query) {
+    DatabaseQuery(@NonNull Iterable<String> tables,
+                  @Nullable M marker,
+                  @NonNull SupportSQLiteQuery query) {
       this.tables = tables;
+      this.marker = marker;
       this.query = query;
     }
 
@@ -831,14 +873,20 @@ public final class BriteDatabase<M> implements Closeable {
       return query.getSql();
     }
 
-    @NonNull @Override public Query apply(@NonNull Set<String> ignored) {
+    @NonNull @Override public Query apply(@NonNull Trigger ignored) {
       return this;
     }
 
-    @Override public boolean test(@NonNull Set<String> strings) {
+    @Override public boolean test(@NonNull Trigger trigger) {
       for (String table : tables) {
-        if (strings.contains(table)) {
-          return true;
+        if (trigger.tables.contains(table)) {
+          if (marker != null) {
+            if (marker.equals(trigger.marker)) {
+              return true;
+            }
+          } else {
+            return true;
+          }
         }
       }
       return false;
