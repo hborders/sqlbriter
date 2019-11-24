@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 @SuppressWarnings("UnstableApiUsage")
-public final class BriteIssueRegistry extends IssueRegistry {
+public final class DimIssueRegistry extends IssueRegistry {
 
     @Override public int getApi() {
         return com.android.tools.lint.detector.api.ApiKt.CURRENT_API;
@@ -17,6 +17,6 @@ public final class BriteIssueRegistry extends IssueRegistry {
     @NonNull
     @Override
     public List<Issue> getIssues() {
-        return Collections.singletonList(SqlBriteArgCountDetector.ISSUE);
+        return Collections.singletonList(SqlDimArgCountDetector.ISSUE);
     }
 }

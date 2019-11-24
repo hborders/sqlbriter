@@ -10,11 +10,11 @@ import static com.android.tools.lint.checks.infrastructure.TestLintTask.lint;
 
 public final class SqlDimArgCountDetectorTest {
     @SuppressWarnings("UnstableApiUsage")
-    @NonNull private static final LintDetectorTest.TestFile BRITE_DATABASE_STUB =
+    @NonNull private static final LintDetectorTest.TestFile DIM_DATABASE_STUB =
             java(
                     "package com.stealthmountain.sqldim;\n" +
                             "\n" +
-                            "public final class BriteDatabase<M> {\n" +
+                            "public final class DimDatabase<M> {\n" +
                             "\n" +
                             "  public void query(String sql, Object... args) {\n" +
                             "  }\n" +
@@ -31,24 +31,24 @@ public final class SqlDimArgCountDetectorTest {
     @Test
     public void cleanCaseWithWithQueryAsLiteral() {
         lint().files(
-                BRITE_DATABASE_STUB,
+                DIM_DATABASE_STUB,
                 java(
                         "package test.pkg;\n" +
                                 "\n" +
-                                "import com.stealthmountain.sqldim.BriteDatabase;\n" +
+                                "import com.stealthmountain.sqldim.DimDatabase;\n" +
                                 "\n" +
                                 "public class Test {\n" +
                                 "    private static final String QUERY = \"SELECT name FROM table WHERE id = ?\";\n" +
                                 "\n" +
                                 "    public void test() {\n" +
-                                "      BriteDatabase<Object> db = new BriteDatabase<>();\n" +
+                                "      DimDatabase<Object> db = new DimDatabase<>();\n" +
                                 "      db.query(QUERY, \"id\");\n" +
                                 "    }\n" +
                                 "\n" +
                                 "}\n"
                 )
         )
-                .issues(SqlBriteArgCountDetector.ISSUE)
+                .issues(SqlDimArgCountDetector.ISSUE)
                 .run()
                 .expectClean();
     }
@@ -56,17 +56,17 @@ public final class SqlDimArgCountDetectorTest {
     @Test
     public void cleanCaseWithQueryThatCantBeEvaluated() {
         lint().files(
-                BRITE_DATABASE_STUB,
+                DIM_DATABASE_STUB,
                 java(
                         "package test.pkg;\n" +
                                 "\n" +
-                                "import com.stealthmountain.sqldim.BriteDatabase;\n" +
+                                "import com.stealthmountain.sqldim.DimDatabase;\n" +
                                 "\n" +
                                 "public class Test {\n" +
                                 "    private static final String QUERY = \"SELECT name FROM table WHERE id = ?\";\n" +
                                 "\n" +
                                 "    public void test() {\n" +
-                                "      BriteDatabase<Object> db = new BriteDatabase<>();\n" +
+                                "      DimDatabase<Object> db = new DimDatabase<>();\n" +
                                 "      db.query(query(), \"id\");\n" +
                                 "    }\n" +
                                 "    private String query() {\n" +
@@ -76,7 +76,7 @@ public final class SqlDimArgCountDetectorTest {
                                 "}\n"
                         )
         )
-                .issues(SqlBriteArgCountDetector.ISSUE)
+                .issues(SqlDimArgCountDetector.ISSUE)
                 .run()
                 .expectClean();
     }
@@ -84,24 +84,24 @@ public final class SqlDimArgCountDetectorTest {
     @Test
     public void cleanCaseWithNonVarargMethodCall() {
         lint().files(
-                BRITE_DATABASE_STUB,
+                DIM_DATABASE_STUB,
                 java(
                         "package test.pkg;\n" +
                                 "\n" +
-                                "import com.stealthmountain.sqldim.BriteDatabase;\n" +
+                                "import com.stealthmountain.sqldim.DimDatabase;\n" +
                                 "\n" +
                                 "public class Test {\n" +
                                 "    private static final String QUERY = \"SELECT name FROM table WHERE id = ?\";\n" +
                                 "\n" +
                                 "    public void test() {\n" +
-                                "      BriteDatabase<Object> db = new BriteDatabase<>();\n" +
+                                "      DimDatabase<Object> db = new DimDatabase<>();\n" +
                                 "      db.createQuery(\"table\", 42);\n" +
                                 "    }\n" +
                                 "\n" +
                                 "}\n"
                 )
         )
-                .issues(SqlBriteArgCountDetector.ISSUE)
+                .issues(SqlDimArgCountDetector.ISSUE)
                 .run()
                 .expectClean();
     }
@@ -109,29 +109,29 @@ public final class SqlDimArgCountDetectorTest {
     @Test
     public void queryMethodWithWrongNumberOfArguments() {
         lint().files(
-                BRITE_DATABASE_STUB,
+                DIM_DATABASE_STUB,
                 java(
                         "package test.pkg;\n" +
                                 "\n" +
-                                "import com.stealthmountain.sqldim.BriteDatabase;\n" +
+                                "import com.stealthmountain.sqldim.DimDatabase;\n" +
                                 "\n" +
                                 "public class Test {\n" +
                                 "    private static final String QUERY = \"SELECT name FROM table WHERE id = ?\";\n" +
                                 "\n" +
                                 "    public void test() {\n" +
-                                "      BriteDatabase<Object> db = new BriteDatabase<>();\n" +
+                                "      DimDatabase<Object> db = new DimDatabase<>();\n" +
                                 "      db.query(QUERY);\n" +
                                 "    }\n" +
                                 "\n" +
                                 "}\n"
                 )
         )
-                .issues(SqlBriteArgCountDetector.ISSUE)
+                .issues(SqlDimArgCountDetector.ISSUE)
                 .run()
                 .expect(
                         "src/test/pkg/Test.java:10: " +
                                 "Error: Wrong argument count, query SELECT name FROM table WHERE id = ?" +
-                                " requires 1 argument, but was provided 0 arguments [SqlBriteArgCount]\n" +
+                                " requires 1 argument, but was provided 0 arguments [SqlDimArgCount]\n" +
                                 "      db.query(QUERY);\n" +
                                 "      ~~~~~~~~~~~~~~~\n" +
                                 "1 errors, 0 warnings"
@@ -141,29 +141,29 @@ public final class SqlDimArgCountDetectorTest {
     @Test
     public void createQueryMethodWithWrongNumberOfArguments() {
         lint().files(
-                BRITE_DATABASE_STUB,
+                DIM_DATABASE_STUB,
                 java(
                         "package test.pkg;\n" +
                                 "\n" +
-                                "import com.stealthmountain.sqldim.BriteDatabase;\n" +
+                                "import com.stealthmountain.sqldim.DimDatabase;\n" +
                                 "\n" +
                                 "public class Test {\n" +
                                 "    private static final String QUERY = \"SELECT name FROM table WHERE id = ?\";\n" +
                                 "\n" +
                                 "    public void test() {\n" +
-                                "      BriteDatabase<Object> db = new BriteDatabase<>();\n" +
+                                "      DimDatabase<Object> db = new DimDatabase<>();\n" +
                                 "      db.createQuery(\"table\", QUERY);\n" +
                                 "    }\n" +
                                 "\n" +
                                 "}\n"
                 )
         )
-                .issues(SqlBriteArgCountDetector.ISSUE)
+                .issues(SqlDimArgCountDetector.ISSUE)
                 .run()
                 .expect(
                         "src/test/pkg/Test.java:10: " +
                                 "Error: Wrong argument count, query SELECT name FROM table WHERE id = ?" +
-                                " requires 1 argument, but was provided 0 arguments [SqlBriteArgCount]\n" +
+                                " requires 1 argument, but was provided 0 arguments [SqlDimArgCount]\n" +
                                 "      db.createQuery(\"table\", QUERY);\n" +
                                 "      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                                 "1 errors, 0 warnings"

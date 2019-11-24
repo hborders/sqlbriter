@@ -22,9 +22,9 @@ import java.util.List;
 import static com.android.tools.lint.detector.api.ConstantEvaluator.evaluateString;
 
 @SuppressWarnings("UnstableApiUsage")
-public final class SqlBriteArgCountDetector extends Detector implements Detector.UastScanner {
+public final class SqlDimArgCountDetector extends Detector implements Detector.UastScanner {
     @NonNull public static final Issue ISSUE = Issue.create(
-            "SqlBriteArgCount",
+            "SqlDimArgCount",
             "Number of provided arguments doesn't match number " +
                     "of arguments specified in query",
             "When providing arguments to query you need to provide the same amount of " +
@@ -33,7 +33,7 @@ public final class SqlBriteArgCountDetector extends Detector implements Detector
             9,
             Severity.ERROR,
             new Implementation(
-                    SqlBriteArgCountDetector.class,
+                    SqlDimArgCountDetector.class,
                     EnumSet.of(
                             Scope.JAVA_FILE,
                             Scope.TEST_SOURCES
@@ -41,7 +41,7 @@ public final class SqlBriteArgCountDetector extends Detector implements Detector
             )
     );
 
-    @NonNull private static final String BRITE_DATABASE = "com.stealthmountain.sqldim.BriteDatabase";
+    @NonNull private static final String DIM_DATABASE = "com.stealthmountain.sqldim.DimDatabase";
     @NonNull private static final String QUERY_METHOD_NAME = "query";
     @NonNull private static final String CREATE_QUERY_METHOD_NAME = "createQuery";
 
@@ -63,7 +63,7 @@ public final class SqlBriteArgCountDetector extends Detector implements Detector
             @NonNull PsiMethod method
     ) {
         @NonNull final JavaEvaluator evaluator = context.getEvaluator();
-        if (evaluator.isMemberInClass(method, BRITE_DATABASE)) {
+        if (evaluator.isMemberInClass(method, DIM_DATABASE)) {
             // Skip non varargs overloads.
             if (!method.isVarArgs()) return;
 
