@@ -19,7 +19,7 @@ dependencies {
   androidTestImplementation rootProject.ext.truth
   androidTestImplementation rootProject.ext.supportSqliteFramework
 
-  lintChecks project(':sqlbrite-lint')
+  lintChecks project(':sqldim-lint')
 
   compileOnly rootProject.ext.checkerQualAndroid
   annotationProcessor rootProject.ext.checker
@@ -65,7 +65,7 @@ android {
     }
   }
 
-  // required for BriteContentResolverTest
+  // required for DimContentResolverTest
   useLibrary 'android.test.base' // for AndroidTestCase
   useLibrary 'android.test.runner' // for ProviderTestCase2
   useLibrary 'android.test.mock' // for MockContentProvider

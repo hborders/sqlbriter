@@ -1,5 +1,5 @@
-include ':sqlbrite'
-include ':sqlbrite-lint'
+include ':sqldim'
+include ':sqldim-lint'
 include ':sample'
 
-rootProject.name = 'sqlbrite-root'
+rootProject.name = 'sqldim-root'

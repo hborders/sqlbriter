@@ -17,7 +17,7 @@ dependencies {
   implementation rootProject.ext.autoValueAnnotations
   annotationProcessor rootProject.ext.autoValueParcel
 
-  implementation project(':sqlbrite')
+  implementation project(':sqldim')
   implementation rootProject.ext.supportSqliteFramework
 }
 
