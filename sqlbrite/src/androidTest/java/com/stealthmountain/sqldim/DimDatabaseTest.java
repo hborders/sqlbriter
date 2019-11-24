@@ -34,7 +34,7 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory;
 import androidx.test.filters.SdkSuppress;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.stealthmountain.sqldim.BriteDatabase.Transaction;
+import com.stealthmountain.sqldim.DimDatabase.Transaction;
 import com.stealthmountain.sqldim.RecordingObserver.CursorAssert;
 import com.stealthmountain.sqldim.TestDb.Employee;
 
@@ -66,8 +66,8 @@ import io.reactivex.subjects.PublishSubject;
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_IGNORE;
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_NONE;
 import static com.google.common.truth.Truth.assertThat;
-import static com.stealthmountain.sqldim.SqlBrite.MarkedQuery;
-import static com.stealthmountain.sqldim.SqlBrite.Query;
+import static com.stealthmountain.sqldim.SqlDim.MarkedQuery;
+import static com.stealthmountain.sqldim.SqlDim.Query;
 import static com.stealthmountain.sqldim.TestDb.BOTH_TABLES;
 import static com.stealthmountain.sqldim.TestDb.EmployeeTable.NAME;
 import static com.stealthmountain.sqldim.TestDb.EmployeeTable.USERNAME;
@@ -91,7 +91,7 @@ public final class DimDatabaseTest {
   @NonNull @Rule public final TemporaryFolder dbFolder = new TemporaryFolder();
 
   @Nullable private SupportSQLiteDatabase real;
-  @Nullable private BriteDatabase<Object> db;
+  @Nullable private DimDatabase<Object> db;
 
   @Before public void setUp() throws IOException {
     @NonNull final Configuration configuration = Configuration.builder(
@@ -105,7 +105,7 @@ public final class DimDatabaseTest {
     @NonNull final SupportSQLiteOpenHelper helper = factory.create(configuration);
     real = helper.getWritableDatabase();
 
-    @NonNull final SqlBrite.Logger logger = new SqlBrite.Logger() {
+    @NonNull final SqlDim.Logger logger = new SqlDim.Logger() {
       @Override public void log(@NonNull String message) {
         logs.add(message);
       }
@@ -123,7 +123,7 @@ public final class DimDatabaseTest {
             return upstream.takeUntil(killSwitch);
           }
         };
-    db = new BriteDatabase<>(helper, logger, scheduler, queryTransformer, markedQueryTransformer);
+    db = new DimDatabase<>(helper, logger, scheduler, queryTransformer, markedQueryTransformer);
   }
 
   @After public void tearDown() {
@@ -131,7 +131,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void loggerEnabled() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.setLoggingEnabled(true);
     db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("john", "John Johnson"));
@@ -139,7 +139,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void loggerDisabled() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.setLoggingEnabled(false);
     db.insert(TABLE_EMPLOYEE, CONFLICT_NONE, employee("john", "John Johnson"));
@@ -147,7 +147,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void loggerIndentsSqlForCreateQuery() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.setLoggingEnabled(true);
     @NonNull final QueryObservable query = db.createQuery(TABLE_EMPLOYEE, "SELECT\n1");
@@ -164,7 +164,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void loggerIndentsSqlForQuery() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.setLoggingEnabled(true);
     db.query("SELECT\n1").close();
@@ -176,7 +176,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void loggerIndentsSqlForExecute() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.setLoggingEnabled(true);
     db.execute("PRAGMA\ncompile_options");
@@ -187,7 +187,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void loggerIndentsSqlForExecuteWithArgs() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.setLoggingEnabled(true);
     db.execute("PRAGMA\ncompile_options", new Object[0]);
@@ -199,7 +199,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void closePropagates() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
     @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
 
     db.close();
@@ -207,7 +207,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void query() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -218,7 +218,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryWithQueryObject() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, new SimpleSQLiteQuery(SELECT_EMPLOYEES)).subscribe(o);
     o.assertCursor()
@@ -229,7 +229,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryMapToList() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final List<Employee> employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
         .mapToList(Employee.MAPPER)
@@ -241,7 +241,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryMapToOne() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final Employee employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
         .mapToOne(Employee.MAPPER)
@@ -250,7 +250,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryMapToOneOrDefault() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final Employee employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
         .mapToOneOrDefault(Employee.MAPPER, new Employee("wrong", "Wrong Person"))
@@ -259,7 +259,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void badQueryCallsError() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     // safeSubscribe is needed because the error occurs in onNext and will otherwise bubble up
     // to the thread exception handler.
@@ -268,7 +268,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryWithArgs() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(
         TABLE_EMPLOYEE, SELECT_EMPLOYEES + " WHERE " + USERNAME + " = ?", "bob")
@@ -279,7 +279,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryObservesInsert() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -298,7 +298,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryInitialValueAndTriggerUsesScheduler() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     scheduler.runTasksImmediately(false);
 
@@ -323,7 +323,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryNotNotifiedWhenInsertFails() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -337,7 +337,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryNotNotifiedWhenQueryTransformerUnsubscribes() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -354,7 +354,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryObservesUpdate() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -374,7 +374,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryNotNotifiedWhenUpdateAffectsZeroRows() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -390,7 +390,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryObservesDelete() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -407,7 +407,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryNotNotifiedWhenDeleteAffectsZeroRows() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -421,7 +421,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryMultipleTables() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(BOTH_TABLES, SELECT_MANAGER_LIST).subscribe(o);
     o.assertCursor()
@@ -430,7 +430,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryMultipleTablesWithQueryObject() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(BOTH_TABLES, new SimpleSQLiteQuery(SELECT_MANAGER_LIST)).subscribe(o);
     o.assertCursor()
@@ -439,7 +439,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryMultipleTablesObservesChanges() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(BOTH_TABLES, SELECT_MANAGER_LIST).subscribe(o);
     o.assertCursor()
@@ -461,7 +461,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryMultipleTablesObservesChangesOnlyOnce() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     // Employee table is in this list twice. We should still only be notified once for a change.
     @NonNull final List<String> tables = Arrays.asList(TABLE_EMPLOYEE, TABLE_MANAGER, TABLE_EMPLOYEE);
@@ -479,7 +479,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryNotNotifiedAfterDispose() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -494,7 +494,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryOnlyNotifiedAfterSubscribe() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final Observable<Query> query = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES);
     o.assertNoMoreEvents();
@@ -512,7 +512,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeSqlNoTrigger() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
         .skip(1) // Skip initial
@@ -523,7 +523,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeSqlWithArgsNoTrigger() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
         .skip(1) // Skip initial
@@ -534,7 +534,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeSqlAndTrigger() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -553,7 +553,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeSqlAndTriggerMultipleTables() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_MANAGER, SELECT_MANAGER_LIST).subscribe(o);
     o.assertCursor()
@@ -582,7 +582,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeSqlAndTriggerWithNoTables() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_MANAGER, SELECT_MANAGER_LIST).subscribe(o);
     o.assertCursor()
@@ -596,7 +596,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeSqlThrowsAndDoesNotTrigger() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
         .skip(1) // Skip initial
@@ -612,7 +612,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeSqlWithArgsAndTrigger() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -631,7 +631,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeSqlWithArgsThrowsAndDoesNotTrigger() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
         .skip(1) // Skip initial
@@ -647,7 +647,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeSqlWithArgsAndTriggerWithMultipleTables() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_MANAGER, SELECT_MANAGER_LIST).subscribe(o);
     o.assertCursor()
@@ -676,7 +676,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeSqlWithArgsAndTriggerWithNoTables() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(BOTH_TABLES, SELECT_MANAGER_LIST).subscribe(o);
     o.assertCursor()
@@ -690,7 +690,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeInsertAndTrigger() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
     @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
 
     @NonNull final SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
@@ -714,7 +714,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeInsertAndDontTrigger() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
     @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
 
     @NonNull final SupportSQLiteStatement statement = real.compileStatement("INSERT OR IGNORE INTO "
@@ -733,7 +733,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeInsertAndTriggerMultipleTables() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
     @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
 
     @NonNull final SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
@@ -769,7 +769,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeInsertAndTriggerNoTables() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
     @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
 
     @NonNull final SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
@@ -789,7 +789,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeInsertThrowsAndDoesNotTrigger() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
     @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
 
     @NonNull final SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
@@ -809,7 +809,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeInsertWithArgsAndTrigger() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
     @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
 
     @NonNull final SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
@@ -834,7 +834,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void executeInsertWithArgsThrowsAndDoesNotTrigger() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
     @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
 
     @NonNull final SupportSQLiteStatement statement = real.compileStatement("INSERT INTO "
@@ -857,7 +857,7 @@ public final class DimDatabaseTest {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.HONEYCOMB)
   @Test public void executeUpdateDeleteAndTrigger() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
     @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
 
     @NonNull final SupportSQLiteStatement statement = real.compileStatement(
@@ -881,7 +881,7 @@ public final class DimDatabaseTest {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.HONEYCOMB)
   @Test public void executeUpdateDeleteAndDontTrigger() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
     @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
 
     @NonNull final SupportSQLiteStatement statement = real.compileStatement(""
@@ -903,7 +903,7 @@ public final class DimDatabaseTest {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.HONEYCOMB)
   @Test public void executeUpdateDeleteAndTriggerWithMultipleTables() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
     @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
 
     @NonNull final SupportSQLiteStatement statement = real.compileStatement(
@@ -939,7 +939,7 @@ public final class DimDatabaseTest {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.HONEYCOMB)
   @Test public void executeUpdateDeleteAndTriggerWithNoTables() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
     @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
 
     @NonNull final SupportSQLiteStatement statement = real.compileStatement(
@@ -960,7 +960,7 @@ public final class DimDatabaseTest {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.HONEYCOMB)
   @Test public void executeUpdateDeleteThrowsAndDoesNotTrigger() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
     @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
 
     @NonNull final SupportSQLiteStatement statement = real.compileStatement(
@@ -981,7 +981,7 @@ public final class DimDatabaseTest {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.HONEYCOMB)
   @Test public void executeUpdateDeleteWithArgsAndTrigger() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
     @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
 
     @NonNull final SupportSQLiteStatement statement = real.compileStatement(
@@ -1006,7 +1006,7 @@ public final class DimDatabaseTest {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.HONEYCOMB)
   @Test public void executeUpdateDeleteWithArgsThrowsAndDoesNotTrigger() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
     @NonNull final SupportSQLiteDatabase real = Objects.requireNonNull(this.real);
 
     @NonNull final SupportSQLiteStatement statement = real.compileStatement(
@@ -1026,7 +1026,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void transactionOnlyNotifiesOnce() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -1056,7 +1056,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void transactionCreatedFromTransactionNotificationWorks() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     // Tests the case where a transaction is created in the subscriber to a query which gets
     // notified as the result of another transaction being committed. With improper ordering, this
@@ -1079,7 +1079,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void transactionIsCloseable() throws IOException {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -1108,7 +1108,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void transactionDoesNotThrow() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -1136,7 +1136,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryCreatedDuringTransactionThrows() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     //noinspection CheckResult
     db.newTransaction();
@@ -1150,7 +1150,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void querySubscribedToDuringTransactionThrows() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final Observable<Query> query = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES);
 
@@ -1160,7 +1160,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void callingEndMultipleTimesThrows() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final Transaction<Object> transaction = db.newTransaction();
     transaction.end();
@@ -1174,7 +1174,7 @@ public final class DimDatabaseTest {
 
   @Test public void querySubscribedToDuringTransactionOnDifferentThread()
       throws InterruptedException {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final Transaction<Object> transaction = db.newTransaction();
 
@@ -1200,7 +1200,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void queryCreatedBeforeTransactionButSubscribedAfter() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final Observable<Query> query = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES);
 
@@ -1224,7 +1224,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void synchronousQueryDuringTransaction() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final Transaction<Object> transaction = db.newTransaction();
     try {
@@ -1240,7 +1240,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void synchronousQueryDuringTransactionSeesChanges() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final Transaction<Object> transaction = db.newTransaction();
     try {
@@ -1268,7 +1268,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void synchronousQueryWithSupportSQLiteQueryDuringTransaction() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final Transaction<Object> transaction = db.newTransaction();
     try {
@@ -1284,7 +1284,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void synchronousQueryWithSupportSQLiteQueryDuringTransactionSeesChanges() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final Transaction<Object> transaction = db.newTransaction();
     try {
@@ -1312,7 +1312,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void nestedTransactionsOnlyNotifyOnce() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -1348,7 +1348,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void nestedTransactionsOnMultipleTables() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(BOTH_TABLES, SELECT_MANAGER_LIST).subscribe(o);
     o.assertCursor()
@@ -1386,7 +1386,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void emptyTransactionDoesNotNotify() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -1405,7 +1405,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void transactionRollbackDoesNotNotify() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertCursor()
@@ -1428,7 +1428,7 @@ public final class DimDatabaseTest {
   @TargetApi(Build.VERSION_CODES.HONEYCOMB)
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.HONEYCOMB)
   @Test public void nonExclusiveTransactionWorks() throws InterruptedException {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     @NonNull final CountDownLatch transactionStarted = new CountDownLatch(1);
     @NonNull final CountDownLatch transactionProceed = new CountDownLatch(1);
@@ -1463,7 +1463,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void badQueryThrows() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     try {
       //noinspection CheckResult
@@ -1475,7 +1475,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void badInsertThrows() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     try {
       db.insert("missing", CONFLICT_NONE, employee("john", "John Johnson"));
@@ -1486,7 +1486,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void badUpdateThrows() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     try {
       db.update("missing", CONFLICT_NONE, employee("john", "John Johnson"), "1");
@@ -1497,7 +1497,7 @@ public final class DimDatabaseTest {
   }
 
   @Test public void badDeleteThrows() {
-    @NonNull final BriteDatabase<Object> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     try {
       db.delete("missing", "1");

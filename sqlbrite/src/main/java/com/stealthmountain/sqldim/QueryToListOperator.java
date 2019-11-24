@@ -28,7 +28,7 @@ import io.reactivex.plugins.RxJavaPlugins;
 import java.util.ArrayList;
 import java.util.List;
 
-final class QueryToListOperator<T> implements ObservableOperator<List<T>, SqlBrite.Query> {
+final class QueryToListOperator<T> implements ObservableOperator<List<T>, SqlDim.Query> {
   @NonNull private final FunctionRR<Cursor, T> mapper;
 
   QueryToListOperator(@NonNull FunctionRR<Cursor, T> mapper) {
@@ -36,11 +36,11 @@ final class QueryToListOperator<T> implements ObservableOperator<List<T>, SqlBri
   }
 
   @NonNull @Override
-  public Observer<? super SqlBrite.Query> apply(@NonNull Observer<? super List<T>> observer) {
+  public Observer<? super SqlDim.Query> apply(@NonNull Observer<? super List<T>> observer) {
     return new MappingObserver<>(observer, mapper);
   }
 
-  static final class MappingObserver<T> extends DisposableObserver<SqlBrite.Query> {
+  static final class MappingObserver<T> extends DisposableObserver<SqlDim.Query> {
     @NonNull private final Observer<? super List<T>> downstream;
     @NonNull private final FunctionRR<Cursor, T> mapper;
 
@@ -53,7 +53,7 @@ final class QueryToListOperator<T> implements ObservableOperator<List<T>, SqlBri
       downstream.onSubscribe(this);
     }
 
-    @Override public void onNext(@NonNull SqlBrite.Query query) {
+    @Override public void onNext(@NonNull SqlDim.Query query) {
       try {
         @Nullable T item;
         @Nullable final Cursor cursor = query.run();

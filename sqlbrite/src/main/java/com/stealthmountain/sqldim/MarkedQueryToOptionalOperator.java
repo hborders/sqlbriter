@@ -32,8 +32,8 @@ import io.reactivex.functions.BiFunction;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.plugins.RxJavaPlugins;
 
-import static com.stealthmountain.sqldim.SqlBrite.MarkedQuery;
-import static com.stealthmountain.sqldim.SqlBrite.MarkedQuery.MarkedValue;
+import static com.stealthmountain.sqldim.SqlDim.MarkedQuery;
+import static com.stealthmountain.sqldim.SqlDim.MarkedQuery.MarkedValue;
 
 @RequiresApi(Build.VERSION_CODES.N)
 final class MarkedQueryToOptionalOperator<M, T>

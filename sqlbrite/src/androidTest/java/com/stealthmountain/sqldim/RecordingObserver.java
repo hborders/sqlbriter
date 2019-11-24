@@ -27,7 +27,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.stealthmountain.sqldim.SqlBrite.Query;
+import static com.stealthmountain.sqldim.SqlDim.Query;
 
 class RecordingObserver extends DisposableObserver<Query> {
   @NonNull private static final Object COMPLETED = "<completed>";

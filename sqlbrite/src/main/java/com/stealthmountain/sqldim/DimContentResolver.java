@@ -24,8 +24,8 @@ import android.os.Looper;
 import androidx.annotation.CheckResult;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import com.stealthmountain.sqldim.SqlBrite.Logger;
-import com.stealthmountain.sqldim.SqlBrite.Query;
+import com.stealthmountain.sqldim.SqlDim.Logger;
+import com.stealthmountain.sqldim.SqlDim.Query;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
@@ -40,11 +40,11 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
  * A lightweight wrapper around {@link ContentResolver} which allows for continuously observing
- * the result of a query. Create using a {@link SqlBrite} instance.
- * Doesn't support {@link SqlBrite.MarkedQuery} because we don't control insert, update, delete
+ * the result of a query. Create using a {@link SqlDim} instance.
+ * Doesn't support {@link SqlDim.MarkedQuery} because we don't control insert, update, delete
  * operations.
  */
-public final class BriteContentResolver {
+public final class DimContentResolver {
   @NonNull final Handler contentObserverHandler = new Handler(Looper.getMainLooper());
 
   @NonNull final ContentResolver contentResolver;
@@ -54,10 +54,10 @@ public final class BriteContentResolver {
 
   volatile boolean logging;
 
-  BriteContentResolver(@NonNull ContentResolver contentResolver,
-                       @NonNull Logger logger,
-                       @NonNull Scheduler scheduler,
-                       @NonNull ObservableTransformer<Query, Query> queryTransformer) {
+  DimContentResolver(@NonNull ContentResolver contentResolver,
+                     @NonNull Logger logger,
+                     @NonNull Scheduler scheduler,
+                     @NonNull ObservableTransformer<Query, Query> queryTransformer) {
     this.contentResolver = contentResolver;
     this.logger = logger;
     this.scheduler = scheduler;
@@ -79,7 +79,7 @@ public final class BriteContentResolver {
    * want updates to a query.
    * <p>
    * Since content resolver triggers are inherently asynchronous, items emitted from the returned
-   * observable use the {@link Scheduler} supplied to {@link SqlBrite#wrapContentProvider}. For
+   * observable use the {@link Scheduler} supplied to {@link SqlDim#wrapContentProvider}. For
    * consistency, the immediate notification sent on subscribe also uses this scheduler. As such,
    * calling {@link Observable#subscribeOn subscribeOn} on the returned observable has no effect.
    * <p>

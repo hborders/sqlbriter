@@ -20,13 +20,13 @@ Usage
 Create a `SqlBrite` instance which is an adapter for the library functionality.
 
 ```java
-SqlBrite sqlBrite = new SqlBrite.Builder().build();
+SqlBrite sqlDim = new SqlBrite.Builder().build();
 ```
 
 Pass a `SupportSQLiteOpenHelper` instance and a `Scheduler` to create a `BriteDatabase`.
 
 ```java
-BriteDatabase db = sqlBrite.wrapDatabaseHelper(openHelper, Schedulers.io());
+BriteDatabase db = sqlDim.wrapDatabaseHelper(openHelper, Schedulers.io());
 ```
 
 A `Scheduler` is required for a few reasons, but the most important is that query notifications can
@@ -130,7 +130,7 @@ The `SqlBrite` object can also wrap a `ContentResolver` for observing a query on
 content provider.
 
 ```java
-BriteContentResolver resolver = sqlBrite.wrapContentProvider(contentResolver, Schedulers.io());
+BriteContentResolver resolver = sqlDim.wrapContentProvider(contentResolver, Schedulers.io());
 Observable<Query> query = resolver.createQuery(/*...*/);
 ```
 

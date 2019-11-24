@@ -20,7 +20,7 @@ import android.database.MatrixCursor;
 
 import androidx.annotation.NonNull;
 
-import com.stealthmountain.sqldim.SqlBrite.Query;
+import com.stealthmountain.sqldim.SqlDim.Query;
 import io.reactivex.Observable;
 
 import org.junit.Test;

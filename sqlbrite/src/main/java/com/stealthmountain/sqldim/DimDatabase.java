@@ -29,9 +29,9 @@ import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
-import com.stealthmountain.sqldim.SqlBrite.Logger;
-import com.stealthmountain.sqldim.SqlBrite.MarkedQuery;
-import com.stealthmountain.sqldim.SqlBrite.Query;
+import com.stealthmountain.sqldim.SqlDim.Logger;
+import com.stealthmountain.sqldim.SqlDim.MarkedQuery;
+import com.stealthmountain.sqldim.SqlDim.Query;
 import io.reactivex.Observable;
 import io.reactivex.ObservableTransformer;
 import io.reactivex.Scheduler;
@@ -63,9 +63,9 @@ import static java.util.Collections.singletonList;
 
 /**
  * A lightweight wrapper around {@link SupportSQLiteOpenHelper} which allows for continuously
- * observing the result of a query. Create using a {@link SqlBrite} instance.
+ * observing the result of a query. Create using a {@link SqlDim} instance.
  */
-public final class BriteDatabase<M> implements Closeable {
+public final class DimDatabase<M> implements Closeable {
   @NonNull private final SupportSQLiteOpenHelper helper;
   @NonNull private final Logger logger;
   @NonNull private final ObservableTransformer<Query, Query> queryTransformer;
@@ -138,11 +138,11 @@ public final class BriteDatabase<M> implements Closeable {
   // Package-private to avoid synthetic accessor method for 'transaction' instance.
   volatile boolean logging;
 
-  BriteDatabase(@NonNull SupportSQLiteOpenHelper helper,
-                @NonNull Logger logger,
-                @NonNull Scheduler scheduler,
-                @NonNull ObservableTransformer<Query, Query> queryTransformer,
-                @NonNull ObservableTransformer<MarkedQuery<M>, MarkedQuery<M>> markedQueryTransformer) {
+  DimDatabase(@NonNull SupportSQLiteOpenHelper helper,
+              @NonNull Logger logger,
+              @NonNull Scheduler scheduler,
+              @NonNull ObservableTransformer<Query, Query> queryTransformer,
+              @NonNull ObservableTransformer<MarkedQuery<M>, MarkedQuery<M>> markedQueryTransformer) {
     this.helper = helper;
     this.logger = logger;
     this.scheduler = scheduler;
@@ -329,7 +329,7 @@ public final class BriteDatabase<M> implements Closeable {
    * updates to a query.
    * <p>
    * Since database triggers are inherently asynchronous, items emitted from the returned
-   * observable use the {@link Scheduler} supplied to {@link SqlBrite#wrapDatabaseHelper}. For
+   * observable use the {@link Scheduler} supplied to {@link SqlDim#wrapDatabaseHelper}. For
    * consistency, the immediate notification sent on subscribe also uses this scheduler. As such,
    * calling {@link Observable#subscribeOn subscribeOn} on the returned observable has no effect.
    * <p>
@@ -358,7 +358,7 @@ public final class BriteDatabase<M> implements Closeable {
    * updates to a query.
    * <p>
    * Since database triggers are inherently asynchronous, items emitted from the returned
-   * observable use the {@link Scheduler} supplied to {@link SqlBrite#wrapDatabaseHelper}. For
+   * observable use the {@link Scheduler} supplied to {@link SqlDim#wrapDatabaseHelper}. For
    * consistency, the immediate notification sent on subscribe also uses this scheduler. As such,
    * calling {@link Observable#subscribeOn subscribeOn} on the returned observable has no effect.
    * <p>
@@ -411,7 +411,7 @@ public final class BriteDatabase<M> implements Closeable {
    * updates to a query.
    * <p>
    * Since database triggers are inherently asynchronous, items emitted from the returned
-   * observable use the {@link Scheduler} supplied to {@link SqlBrite#wrapDatabaseHelper}. For
+   * observable use the {@link Scheduler} supplied to {@link SqlDim#wrapDatabaseHelper}. For
    * consistency, the immediate notification sent on subscribe also uses this scheduler. As such,
    * calling {@link Observable#subscribeOn subscribeOn} on the returned observable has no effect.
    * <p>
@@ -440,7 +440,7 @@ public final class BriteDatabase<M> implements Closeable {
    * updates to a query.
    * <p>
    * Since database triggers are inherently asynchronous, items emitted from the returned
-   * observable use the {@link Scheduler} supplied to {@link SqlBrite#wrapDatabaseHelper}. For
+   * observable use the {@link Scheduler} supplied to {@link SqlDim#wrapDatabaseHelper}. For
    * consistency, the immediate notification sent on subscribe also uses this scheduler. As such,
    * calling {@link Observable#subscribeOn subscribeOn} on the returned observable has no effect.
    * <p>
@@ -809,7 +809,7 @@ public final class BriteDatabase<M> implements Closeable {
    *
    * Includes no marker
    *
-   * @see BriteDatabase#executeAndTriggerMarked(Object, String, String)
+   * @see DimDatabase#executeAndTriggerMarked(Object, String, String)
    */
   @WorkerThread
   public void executeAndTrigger(@NonNull Set<String> tables, @NonNull String sql) {
@@ -819,7 +819,7 @@ public final class BriteDatabase<M> implements Closeable {
   /**
    * See {@link #executeAndTriggerMarked(Object, String, String)} for usage. This overload allows for triggering multiple tables.
    *
-   * @see BriteDatabase#executeAndTriggerMarked(Object, String, String)
+   * @see DimDatabase#executeAndTriggerMarked(Object, String, String)
    */
   @WorkerThread
   public void executeAndTriggerMarked(@NonNull M marker, @NonNull Set<String> tables, @NonNull String sql) {
@@ -864,7 +864,7 @@ public final class BriteDatabase<M> implements Closeable {
    *
    * Includes no marker
    *
-   * @see BriteDatabase#executeAndTriggerMarked(Object, String, String, Object...)
+   * @see DimDatabase#executeAndTriggerMarked(Object, String, String, Object...)
    */
   @WorkerThread
   public void executeAndTrigger(@NonNull Set<String> tables, @NonNull String sql, @NonNull Object... args) {
@@ -874,7 +874,7 @@ public final class BriteDatabase<M> implements Closeable {
   /**
    * See {@link #executeAndTriggerMarked(Object, String, String, Object...)} for usage. This overload allows for triggering multiple tables.
    *
-   * @see BriteDatabase#executeAndTriggerMarked(Object, String, String, Object...)
+   * @see DimDatabase#executeAndTriggerMarked(Object, String, String, Object...)
    */
   @WorkerThread
   public void executeAndTriggerMarked(@NonNull M marker, @NonNull Set<String> tables,
@@ -930,7 +930,7 @@ public final class BriteDatabase<M> implements Closeable {
    *
    * Includes no marker
    *
-   * @see BriteDatabase#executeUpdateDeleteMarked(Object, String, SupportSQLiteStatement)
+   * @see DimDatabase#executeUpdateDeleteMarked(Object, String, SupportSQLiteStatement)
    */
   @WorkerThread
   public int executeUpdateDelete(@NonNull Set<String> tables, @NonNull SupportSQLiteStatement statement) {
@@ -941,7 +941,7 @@ public final class BriteDatabase<M> implements Closeable {
    * See {@link #executeUpdateDeleteMarked(Object, String, SupportSQLiteStatement)} for usage. This overload
    * allows for triggering multiple tables.
    *
-   * @see BriteDatabase#executeUpdateDeleteMarked(Object, String, SupportSQLiteStatement)
+   * @see DimDatabase#executeUpdateDeleteMarked(Object, String, SupportSQLiteStatement)
    */
   @WorkerThread
   public int executeUpdateDeleteMarked(@NonNull M marker, @NonNull Set<String> tables,
@@ -1001,7 +1001,7 @@ public final class BriteDatabase<M> implements Closeable {
    *
    * Includes no marker
    *
-   * @see BriteDatabase#executeInsertMarked(Object, String, SupportSQLiteStatement)
+   * @see DimDatabase#executeInsertMarked(Object, String, SupportSQLiteStatement)
    */
   @WorkerThread
   public long executeInsert(@NonNull Set<String> tables, @NonNull SupportSQLiteStatement statement) {
@@ -1012,7 +1012,7 @@ public final class BriteDatabase<M> implements Closeable {
    * See {@link #executeInsertMarked(Object, String, SupportSQLiteStatement)} for usage. This overload allows for
    * triggering multiple tables.
    *
-   * @see BriteDatabase#executeInsertMarked(Object, String, SupportSQLiteStatement)
+   * @see DimDatabase#executeInsertMarked(Object, String, SupportSQLiteStatement)
    */
   @WorkerThread
   public long executeInsertMarked(@NonNull M marker, @NonNull Set<String> tables,

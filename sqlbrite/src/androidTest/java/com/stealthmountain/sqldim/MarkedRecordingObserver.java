@@ -31,7 +31,7 @@ import io.reactivex.observers.DisposableObserver;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.stealthmountain.sqldim.SqlBrite.MarkedQuery;
+import static com.stealthmountain.sqldim.SqlDim.MarkedQuery;
 
 class MarkedRecordingObserver extends DisposableObserver<MarkedQuery<String>> {
   @NonNull private static final Object COMPLETED = "<completed>";

@@ -16,8 +16,8 @@ import io.reactivex.Observer;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Function;
 
-import static com.stealthmountain.sqldim.SqlBrite.MarkedQuery;
-import static com.stealthmountain.sqldim.SqlBrite.MarkedQuery.MarkedValue;
+import static com.stealthmountain.sqldim.SqlDim.MarkedQuery;
+import static com.stealthmountain.sqldim.SqlDim.MarkedQuery.MarkedValue;
 
 /** An {@link Observable} of {@link MarkedQuery} which offers query-specific convenience operators. */
 public final class MarkedQueryObservable<M> extends Observable<MarkedQuery<M>> {

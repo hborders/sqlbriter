@@ -29,8 +29,8 @@ import io.reactivex.functions.BiFunction;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.plugins.RxJavaPlugins;
 
-import static com.stealthmountain.sqldim.SqlBrite.MarkedQuery;
-import static com.stealthmountain.sqldim.SqlBrite.MarkedQuery.MarkedValue;
+import static com.stealthmountain.sqldim.SqlDim.MarkedQuery;
+import static com.stealthmountain.sqldim.SqlDim.MarkedQuery.MarkedValue;
 
 final class MarkedQueryToOneOperator<M, T> implements ObservableOperator<MarkedValue<M, T>, MarkedQuery<M>> {
   @NonNull private final BiFunction<Cursor, Set<M>, T> mapper;

@@ -31,7 +31,8 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import com.example.sqldim.todo.R;
 import com.example.sqldim.todo.TodoApp;
-import com.stealthmountain.sqldim.BriteDatabase;
+import com.stealthmountain.sqldim.DimDatabase;
+
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import javax.inject.Inject;
@@ -49,7 +50,8 @@ public final class ListsFragment extends Fragment {
     return new ListsFragment();
   }
 
-  @Inject BriteDatabase<Object> db;
+  @Inject
+  DimDatabase<Object> db;
 
   private Listener listener;
   private ListsAdapter adapter;

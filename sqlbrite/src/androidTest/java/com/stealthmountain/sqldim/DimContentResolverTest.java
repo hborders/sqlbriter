@@ -27,7 +27,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.stealthmountain.sqldim.SqlBrite.Query;
+import com.stealthmountain.sqldim.SqlDim.Query;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -57,7 +57,7 @@ public final class DimContentResolverTest
   @NonNull private final PublishSubject<Object> killSwitch = PublishSubject.create();
 
   @Nullable private ContentResolver contentResolver;
-  @Nullable private BriteContentResolver db;
+  @Nullable private DimContentResolver db;
 
   public DimContentResolverTest() {
     super(TestContentProvider.class, AUTHORITY.getAuthority());
@@ -68,7 +68,7 @@ public final class DimContentResolverTest
     @NonNull final ContentResolver contentResolver = getMockContentResolver();
     this.contentResolver = contentResolver;
 
-    @NonNull final SqlBrite.Logger logger = new SqlBrite.Logger() {
+    @NonNull final SqlDim.Logger logger = new SqlDim.Logger() {
       @Override public void log(@NonNull String message) {
         logs.add(message);
       }
@@ -79,7 +79,7 @@ public final class DimContentResolverTest
             return upstream.takeUntil(killSwitch);
           }
         };
-    db = new BriteContentResolver(this.contentResolver, logger, scheduler, queryTransformer);
+    db = new DimContentResolver(this.contentResolver, logger, scheduler, queryTransformer);
 
     @NonNull final ContentResolver applicationContextContentResolver =
         Objects.requireNonNull(ApplicationProvider.getApplicationContext().getContentResolver());
@@ -94,7 +94,7 @@ public final class DimContentResolverTest
 
   public void testLoggerEnabled() {
     @NonNull final ContentResolver contentResolver = Objects.requireNonNull(this.contentResolver);
-    @NonNull final BriteContentResolver db = Objects.requireNonNull(this.db);
+    @NonNull final DimContentResolver db = Objects.requireNonNull(this.db);
 
     db.setLoggingEnabled(true);
 
@@ -108,7 +108,7 @@ public final class DimContentResolverTest
 
   public void testLoggerDisabled() {
     @NonNull final ContentResolver contentResolver = Objects.requireNonNull(this.contentResolver);
-    @NonNull final BriteContentResolver db = Objects.requireNonNull(this.db);
+    @NonNull final DimContentResolver db = Objects.requireNonNull(this.db);
 
     db.setLoggingEnabled(false);
 
@@ -118,7 +118,7 @@ public final class DimContentResolverTest
 
   public void testCreateQueryObservesInsert() {
     @NonNull final ContentResolver contentResolver = Objects.requireNonNull(this.contentResolver);
-    @NonNull final BriteContentResolver db = Objects.requireNonNull(this.db);
+    @NonNull final DimContentResolver db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE, null, null, null, null, false).subscribe(o);
     o.assertCursor().isExhausted();
@@ -129,7 +129,7 @@ public final class DimContentResolverTest
 
   public void testCreateQueryObservesUpdate() {
     @NonNull final ContentResolver contentResolver = Objects.requireNonNull(this.contentResolver);
-    @NonNull final BriteContentResolver db = Objects.requireNonNull(this.db);
+    @NonNull final DimContentResolver db = Objects.requireNonNull(this.db);
 
     contentResolver.insert(TABLE, values("key1", "val1"));
     db.createQuery(TABLE, null, null, null, null, false).subscribe(o);
@@ -141,7 +141,7 @@ public final class DimContentResolverTest
 
   public void testCreateQueryObservesDelete() {
     @NonNull final ContentResolver contentResolver = Objects.requireNonNull(this.contentResolver);
-    @NonNull final BriteContentResolver db = Objects.requireNonNull(this.db);
+    @NonNull final DimContentResolver db = Objects.requireNonNull(this.db);
 
     contentResolver.insert(TABLE, values("key1", "val1"));
     db.createQuery(TABLE, null, null, null, null, false).subscribe(o);
@@ -153,7 +153,7 @@ public final class DimContentResolverTest
 
   public void testUnsubscribeDoesNotTrigger() {
     @NonNull final ContentResolver contentResolver = Objects.requireNonNull(this.contentResolver);
-    @NonNull final BriteContentResolver db = Objects.requireNonNull(this.db);
+    @NonNull final DimContentResolver db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE, null, null, null, null, false).subscribe(o);
     o.assertCursor().isExhausted();
@@ -166,7 +166,7 @@ public final class DimContentResolverTest
 
   public void testQueryNotNotifiedWhenQueryTransformerDisposed() {
     @NonNull final ContentResolver contentResolver = Objects.requireNonNull(this.contentResolver);
-    @NonNull final BriteContentResolver db = Objects.requireNonNull(this.db);
+    @NonNull final DimContentResolver db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE, null, null, null, null, false).subscribe(o);
     o.assertCursor().isExhausted();
@@ -180,7 +180,7 @@ public final class DimContentResolverTest
 
   public void testInitialValueAndTriggerUsesScheduler() {
     @NonNull final ContentResolver contentResolver = Objects.requireNonNull(this.contentResolver);
-    @NonNull final BriteContentResolver db = Objects.requireNonNull(this.db);
+    @NonNull final DimContentResolver db = Objects.requireNonNull(this.db);
 
     scheduler.runTasksImmediately(false);
 

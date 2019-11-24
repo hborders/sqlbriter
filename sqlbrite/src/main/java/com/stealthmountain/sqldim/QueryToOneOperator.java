@@ -25,7 +25,7 @@ import io.reactivex.exceptions.Exceptions;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.plugins.RxJavaPlugins;
 
-final class QueryToOneOperator<T> implements ObservableOperator<T, SqlBrite.Query> {
+final class QueryToOneOperator<T> implements ObservableOperator<T, SqlDim.Query> {
   @NonNull private final FunctionRR<Cursor, T> mapper;
   @Nullable private final T defaultValue;
 
@@ -36,11 +36,11 @@ final class QueryToOneOperator<T> implements ObservableOperator<T, SqlBrite.Quer
   }
 
   @NonNull @Override
-  public Observer<? super SqlBrite.Query> apply(@NonNull Observer<? super T> observer) {
+  public Observer<? super SqlDim.Query> apply(@NonNull Observer<? super T> observer) {
     return new MappingObserver<>(observer, mapper, defaultValue);
   }
 
-  static final class MappingObserver<T> extends DisposableObserver<SqlBrite.Query> {
+  static final class MappingObserver<T> extends DisposableObserver<SqlDim.Query> {
     @NonNull private final Observer<? super T> downstream;
     @NonNull private final FunctionRR<Cursor, T> mapper;
     @Nullable private final T defaultValue;
@@ -56,7 +56,7 @@ final class QueryToOneOperator<T> implements ObservableOperator<T, SqlBrite.Quer
       downstream.onSubscribe(this);
     }
 
-    @Override public void onNext(@NonNull SqlBrite.Query query) {
+    @Override public void onNext(@NonNull SqlDim.Query query) {
       try {
         @Nullable final T item;
         @Nullable final Cursor cursor = query.run();

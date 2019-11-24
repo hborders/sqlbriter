@@ -6,8 +6,8 @@ import android.database.MatrixCursor;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import com.stealthmountain.sqldim.SqlBrite.Query;
-import com.stealthmountain.sqldim.SqlBrite.MarkedQuery;
+import com.stealthmountain.sqldim.SqlDim.Query;
+import com.stealthmountain.sqldim.SqlDim.MarkedQuery;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +29,7 @@ public final class SqlDimTest {
   @NonNull private static final String[] COLUMN_NAMES = { FIRST_NAME, LAST_NAME };
 
   @Test public void builderDisallowsNull() {
-    @NonNull final SqlBrite.Builder<Object> builder = new SqlBrite.Builder<>();
+    @NonNull final SqlDim.Builder<Object> builder = new SqlDim.Builder<>();
     try {
       //noinspection ConstantConditions
       builder.logger(null);

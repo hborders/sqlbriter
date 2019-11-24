@@ -30,7 +30,7 @@ import com.example.sqldim.todo.R;
 import com.example.sqldim.todo.TodoApp;
 import com.example.sqldim.todo.db.TodoItem;
 import com.jakewharton.rxbinding2.widget.RxTextView;
-import com.stealthmountain.sqldim.BriteDatabase;
+import com.stealthmountain.sqldim.DimDatabase;
 import io.reactivex.Observable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
@@ -54,7 +54,8 @@ public final class NewItemFragment extends DialogFragment {
 
   private final PublishSubject<String> createClicked = PublishSubject.create();
 
-  @Inject BriteDatabase<Object> db;
+  @Inject
+  DimDatabase<Object> db;
 
   private long getListId() {
     return getArguments().getLong(KEY_LIST_ID);

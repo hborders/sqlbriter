@@ -44,10 +44,10 @@ import java.util.Set;
  * A lightweight wrapper around {@link SupportSQLiteOpenHelper} which allows for continuously
  * observing the result of a query.
  */
-public final class SqlBrite<M> {
+public final class SqlDim<M> {
   @NonNull static final Logger DEFAULT_LOGGER = new Logger() {
     @Override public void log(@NonNull String message) {
-      Log.d("SqlBrite", message);
+      Log.d("SqlDim", message);
     }
   };
   @NonNull static final ObservableTransformer<Query, Query> DEFAULT_TRANSFORMER =
@@ -90,8 +90,8 @@ public final class SqlBrite<M> {
     }
 
     @CheckResult @NonNull
-    public SqlBrite<M> build() {
-      return new SqlBrite<>(logger, queryTransformer, markedQueryTransformer);
+    public SqlDim<M> build() {
+      return new SqlDim<>(logger, queryTransformer, markedQueryTransformer);
     }
   }
 
@@ -99,9 +99,9 @@ public final class SqlBrite<M> {
   @NonNull final ObservableTransformer<Query, Query> queryTransformer;
   @NonNull final ObservableTransformer<MarkedQuery<M>, MarkedQuery<M>> markedQueryTransformer;
 
-  SqlBrite(@NonNull Logger logger,
-           @NonNull ObservableTransformer<Query, Query> queryTransformer,
-           @NonNull ObservableTransformer<MarkedQuery<M>, MarkedQuery<M>> markedQueryTransformer) {
+  SqlDim(@NonNull Logger logger,
+         @NonNull ObservableTransformer<Query, Query> queryTransformer,
+         @NonNull ObservableTransformer<MarkedQuery<M>, MarkedQuery<M>> markedQueryTransformer) {
     this.logger = logger;
     this.queryTransformer = queryTransformer;
     this.markedQueryTransformer = markedQueryTransformer;
@@ -113,16 +113,16 @@ public final class SqlBrite<M> {
    * While not strictly required, instances of this class assume that they will be the only ones
    * interacting with the underlying {@link SupportSQLiteOpenHelper} and it is required for
    * automatic notifications of table changes to work. See
-   * {@linkplain BriteDatabase#createQuery(String, String, Object...) the <code>query</code> method}
+   * {@linkplain DimDatabase#createQuery(String, String, Object...) the <code>query</code> method}
    * for more information on that behavior.
    *
    * @param scheduler The {@link Scheduler} on which items from
-   * {@link BriteDatabase#createQuery(String, String, Object...)} will be emitted.
+   * {@link DimDatabase#createQuery(String, String, Object...)} will be emitted.
    */
-  @CheckResult @NonNull public BriteDatabase<M> wrapDatabaseHelper(
+  @CheckResult @NonNull public DimDatabase<M> wrapDatabaseHelper(
       @NonNull SupportSQLiteOpenHelper helper,
       @NonNull Scheduler scheduler) {
-    return new BriteDatabase<M>(
+    return new DimDatabase<M>(
             helper,
             logger,
             scheduler,
@@ -135,11 +135,11 @@ public final class SqlBrite<M> {
    * Wrap a {@link ContentResolver} for observable queries.
    *
    * @param scheduler The {@link Scheduler} on which items from
-   * {@link BriteContentResolver#createQuery} will be emitted.
+   * {@link DimContentResolver#createQuery} will be emitted.
    */
-  @CheckResult @NonNull public BriteContentResolver wrapContentProvider(
+  @CheckResult @NonNull public DimContentResolver wrapContentProvider(
       @NonNull ContentResolver contentResolver, @NonNull Scheduler scheduler) {
-    return new BriteContentResolver(contentResolver, logger, scheduler, queryTransformer);
+    return new DimContentResolver(contentResolver, logger, scheduler, queryTransformer);
   }
 
   /**

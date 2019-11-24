@@ -37,7 +37,7 @@ import com.example.sqldim.todo.db.TodoItem;
 import com.example.sqldim.todo.db.TodoList;
 import com.jakewharton.rxbinding2.widget.AdapterViewItemClickEvent;
 import com.jakewharton.rxbinding2.widget.RxAdapterView;
-import com.stealthmountain.sqldim.BriteDatabase;
+import com.stealthmountain.sqldim.DimDatabase;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -50,7 +50,7 @@ import javax.inject.Inject;
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_NONE;
 import static androidx.core.view.MenuItemCompat.SHOW_AS_ACTION_IF_ROOM;
 import static androidx.core.view.MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT;
-import static com.stealthmountain.sqldim.SqlBrite.Query;
+import static com.stealthmountain.sqldim.SqlDim.Query;
 
 public final class ItemsFragment extends Fragment {
   private static final String KEY_LIST_ID = "list_id";
@@ -86,7 +86,8 @@ public final class ItemsFragment extends Fragment {
     return fragment;
   }
 
-  @Inject BriteDatabase<Object> db;
+  @Inject
+  DimDatabase<Object> db;
 
   private Listener listener;
   private ItemsAdapter adapter;

@@ -22,8 +22,8 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper;
 import androidx.sqlite.db.SupportSQLiteOpenHelper.Configuration;
 import androidx.sqlite.db.SupportSQLiteOpenHelper.Factory;
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory;
-import com.stealthmountain.sqldim.BriteDatabase;
-import com.stealthmountain.sqldim.SqlBrite;
+import com.stealthmountain.sqldim.DimDatabase;
+import com.stealthmountain.sqldim.SqlDim;
 import dagger.Module;
 import dagger.Provides;
 import io.reactivex.schedulers.Schedulers;
@@ -32,9 +32,10 @@ import timber.log.Timber;
 
 @Module
 public final class DbModule {
-  @NonNull @Provides @Singleton SqlBrite<Object> provideSqlBrite() {
-    return new SqlBrite.Builder<Object>()
-        .logger(new SqlBrite.Logger() {
+  @NonNull @Provides @Singleton
+  SqlDim<Object> provideSqlDim() {
+    return new SqlDim.Builder<Object>()
+        .logger(new SqlDim.Logger() {
           @Override public void log(@NonNull String message) {
             Timber.tag("Database").v(message);
           }
@@ -43,15 +44,15 @@ public final class DbModule {
   }
 
     @NonNull @Provides @Singleton
-    BriteDatabase<Object> provideDatabase(@NonNull SqlBrite<Object> sqlBrite,
-                                          @NonNull Application application) {
+    DimDatabase<Object> provideDatabase(@NonNull SqlDim<Object> sqlDim,
+                                        @NonNull Application application) {
     Configuration configuration = Configuration.builder(application)
         .name("todo.db")
         .callback(new DbCallback())
         .build();
     Factory factory = new FrameworkSQLiteOpenHelperFactory();
     SupportSQLiteOpenHelper helper = factory.create(configuration);
-    BriteDatabase<Object> db = sqlBrite.wrapDatabaseHelper(helper, Schedulers.io());
+    DimDatabase<Object> db = sqlDim.wrapDatabaseHelper(helper, Schedulers.io());
     db.setLoggingEnabled(true);
     return db;
   }

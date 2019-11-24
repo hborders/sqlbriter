@@ -20,7 +20,7 @@ import android.database.MatrixCursor;
 
 import androidx.annotation.NonNull;
 
-import com.stealthmountain.sqldim.SqlBrite.MarkedQuery;
+import com.stealthmountain.sqldim.SqlDim.MarkedQuery;
 
 import org.junit.Test;
 

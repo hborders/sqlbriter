@@ -5,7 +5,7 @@ import android.os.Build;
 import androidx.annotation.CheckResult;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-import com.stealthmountain.sqldim.SqlBrite.Query;
+import com.stealthmountain.sqldim.SqlDim.Query;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.functions.Function;

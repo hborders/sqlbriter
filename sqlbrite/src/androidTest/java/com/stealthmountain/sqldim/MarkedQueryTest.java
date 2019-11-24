@@ -27,7 +27,7 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory;
 import androidx.test.filters.SdkSuppress;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.stealthmountain.sqldim.SqlBrite.MarkedQuery;
+import com.stealthmountain.sqldim.SqlDim.MarkedQuery;
 import com.stealthmountain.sqldim.TestDb.Employee;
 
 import org.junit.Before;
@@ -47,7 +47,7 @@ import io.reactivex.schedulers.Schedulers;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_NONE;
 import static com.google.common.truth.Truth.assertThat;
-import static com.stealthmountain.sqldim.SqlBrite.MarkedQuery.MarkedValue;
+import static com.stealthmountain.sqldim.SqlDim.MarkedQuery.MarkedValue;
 import static com.stealthmountain.sqldim.TestDb.Employee.MARKED_MAPPER;
 import static com.stealthmountain.sqldim.TestDb.SELECT_EMPLOYEES;
 import static com.stealthmountain.sqldim.TestDb.TABLE_EMPLOYEE;
@@ -55,7 +55,7 @@ import static com.stealthmountain.sqldim.TestDb.employee;
 import static org.junit.Assert.fail;
 
 public final class MarkedQueryTest {
-  @Nullable private BriteDatabase<String> db;
+  @Nullable private DimDatabase<String> db;
 
   @Before public void setUp() {
     @NonNull final Configuration configuration = Configuration.builder(
@@ -67,12 +67,12 @@ public final class MarkedQueryTest {
     @NonNull final Factory factory = new FrameworkSQLiteOpenHelperFactory();
     @NonNull final SupportSQLiteOpenHelper helper = factory.create(configuration);
 
-    @NonNull final SqlBrite<String> sqlBrite = new SqlBrite.Builder<String>().build();
-    db = sqlBrite.wrapDatabaseHelper(helper, Schedulers.trampoline());
+    @NonNull final SqlDim<String> sqlDim = new SqlDim.Builder<String>().build();
+    db = sqlDim.wrapDatabaseHelper(helper, Schedulers.trampoline());
   }
 
   @Test public void emptyMarkedQueryMapToOne() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     @NonNull final MarkedValue<String, Employee> employeeMarkedValue =
         db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
@@ -82,7 +82,7 @@ public final class MarkedQueryTest {
   }
 
   @Test public void markedQueryMapToOne() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     TestObserver<MarkedValue<String, Employee>> t = new TestObserver<>();
     db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
@@ -96,7 +96,7 @@ public final class MarkedQueryTest {
   }
 
   @Test public void mapToOneThrowsWhenMapperReturnsNull() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
         .lift(MarkedQuery.mapToOne(new BiFunction<Cursor, Set<String>, Employee>() {
@@ -111,7 +111,7 @@ public final class MarkedQueryTest {
   }
 
   @Test public void mapToOneThrowsOnMultipleRows() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     @NonNull final Observable<MarkedValue<String, Employee>> employeesMarkedValue =
         db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 2") //
@@ -142,7 +142,7 @@ public final class MarkedQueryTest {
   }
 
   @Test public void emptyMarkedMapToOneOrDefault() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     @NonNull final MarkedValue<String, Employee> employeeMarkedValue =
         db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
@@ -152,7 +152,7 @@ public final class MarkedQueryTest {
   }
 
   @Test public void markedMapToOneOrDefault() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     TestObserver<MarkedValue<String, Employee>> t = new TestObserver<>();
     db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
@@ -176,7 +176,7 @@ public final class MarkedQueryTest {
   }
 
   @Test public void mapToOneOrDefaultThrowsWhenMapperReturnsNull() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
         .lift(MarkedQuery.mapToOneOrDefault(new BiFunction<Cursor, Set<String>, Employee>() {
@@ -191,7 +191,7 @@ public final class MarkedQueryTest {
   }
 
   @Test public void mapToOneOrDefaultThrowsOnMultipleRows() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     @NonNull final Observable<MarkedValue<String, Employee>> employees =
         db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 2") //
@@ -223,7 +223,7 @@ public final class MarkedQueryTest {
   }
 
   @Test public void emptyMarkedMapToList() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     @NonNull final MarkedValue<String, List<Employee>> employees =
         db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
@@ -237,7 +237,7 @@ public final class MarkedQueryTest {
   }
 
   @Test public void markedMapToList() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     TestObserver<MarkedValue<String, List<Employee>>> t = new TestObserver<>();
 
@@ -257,7 +257,7 @@ public final class MarkedQueryTest {
   }
 
   @Test public void emptyMarkedMapToListEmptyWhenNoRows() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     @NonNull final MarkedValue<String, List<Employee>> employeesMarkedValue =
         db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " WHERE 1=2")
@@ -268,7 +268,7 @@ public final class MarkedQueryTest {
   }
 
   @Test public void markedMapToListEmptyWhenNoRows() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     TestObserver<MarkedValue<String, List<Employee>>> t = new TestObserver<>();
 
@@ -283,7 +283,7 @@ public final class MarkedQueryTest {
   }
 
   @Test public void mapToListThrowsWhenMapperReturnsNull() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     @NonNull final BiFunction<Cursor, Set<String>, Employee> mapToNull = new BiFunction<Cursor, Set<String>, Employee>() {
       private int count;
@@ -323,7 +323,7 @@ public final class MarkedQueryTest {
 
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.N)
   @Test public void emptyMarkedMapToOptional() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
             .lift(MarkedQuery.mapToOptional(MARKED_MAPPER))
@@ -333,7 +333,7 @@ public final class MarkedQueryTest {
 
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.N)
   @Test public void markedMapToOptional() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     @NonNull final TestObserver<MarkedValue<String, Optional<Employee>>> t =
         db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
@@ -348,7 +348,7 @@ public final class MarkedQueryTest {
 
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.N)
   @Test public void mapToOptionalThrowsWhenMapperReturnsNull() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
         .lift(MarkedQuery.mapToOptional(new BiFunction<Cursor, Set<String>, Employee>() {
@@ -364,7 +364,7 @@ public final class MarkedQueryTest {
 
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.N)
   @Test public void mapToOptionalThrowsOnMultipleRows() {
-    @NonNull final BriteDatabase<String> db = Objects.requireNonNull(this.db);
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 2") //
         .lift(MarkedQuery.mapToOptional(MARKED_MAPPER))
