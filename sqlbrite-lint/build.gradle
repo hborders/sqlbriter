@@ -10,6 +10,6 @@ dependencies {
 
 jar {
   manifest {
-    attributes("Lint-Registry-v2": "com.squareup.sqlbrite3.BriteIssueRegistry")
+    attributes("Lint-Registry-v2": "com.stealthmountain.sqldim.BriteIssueRegistry")
   }
 }

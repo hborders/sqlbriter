@@ -37,7 +37,7 @@ import com.example.sqldim.todo.db.TodoItem;
 import com.example.sqldim.todo.db.TodoList;
 import com.jakewharton.rxbinding2.widget.AdapterViewItemClickEvent;
 import com.jakewharton.rxbinding2.widget.RxAdapterView;
-import com.squareup.sqlbrite3.BriteDatabase;
+import com.stealthmountain.sqldim.BriteDatabase;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -50,7 +50,7 @@ import javax.inject.Inject;
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_NONE;
 import static androidx.core.view.MenuItemCompat.SHOW_AS_ACTION_IF_ROOM;
 import static androidx.core.view.MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT;
-import static com.squareup.sqlbrite3.SqlBrite.Query;
+import static com.stealthmountain.sqldim.SqlBrite.Query;
 
 public final class ItemsFragment extends Fragment {
   private static final String KEY_LIST_ID = "list_id";

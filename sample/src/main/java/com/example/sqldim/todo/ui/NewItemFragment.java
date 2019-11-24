@@ -30,7 +30,7 @@ import com.example.sqldim.todo.R;
 import com.example.sqldim.todo.TodoApp;
 import com.example.sqldim.todo.db.TodoItem;
 import com.jakewharton.rxbinding2.widget.RxTextView;
-import com.squareup.sqlbrite3.BriteDatabase;
+import com.stealthmountain.sqldim.BriteDatabase;
 import io.reactivex.Observable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;

@@ -31,7 +31,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import com.example.sqldim.todo.R;
 import com.example.sqldim.todo.TodoApp;
-import com.squareup.sqlbrite3.BriteDatabase;
+import com.stealthmountain.sqldim.BriteDatabase;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import javax.inject.Inject;

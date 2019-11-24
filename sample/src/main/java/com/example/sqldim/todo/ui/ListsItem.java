@@ -24,7 +24,7 @@ import com.example.sqldim.todo.db.Db;
 import com.example.sqldim.todo.db.TodoItem;
 import com.example.sqldim.todo.db.TodoList;
 import com.google.auto.value.AutoValue;
-import com.squareup.sqlbrite3.FunctionRR;
+import com.stealthmountain.sqldim.FunctionRR;
 
 import java.util.Arrays;
 import java.util.Collection;

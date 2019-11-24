@@ -93,7 +93,7 @@ task publishV3Javadoc(type: JavaExec) {
   args = [
       'build/javadoc',
       'https://github.com/square/sqlbrite',
-      'com.squareup.sqlbrite3'
+      'com.stealthmountain.sqldim'
   ]
 }
 task publishJavadoc(dependsOn: [publishV1Javadoc, publishV2Javadoc, publishV3Javadoc])

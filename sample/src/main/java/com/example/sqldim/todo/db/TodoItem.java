@@ -24,7 +24,7 @@ import androidx.annotation.NonNull;
 import com.google.auto.value.AutoValue;
 
 import java.util.Objects;
-import com.squareup.sqlbrite3.FunctionRR;
+import com.stealthmountain.sqldim.FunctionRR;
 
 @AutoValue
 public abstract class TodoItem implements Parcelable {
