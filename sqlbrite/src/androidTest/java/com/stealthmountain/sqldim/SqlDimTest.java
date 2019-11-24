@@ -23,7 +23,7 @@ import static org.junit.Assert.fail;
 
 @RunWith(AndroidJUnit4.class)
 @SuppressWarnings("CheckResult")
-public final class SqlBriteTest {
+public final class SqlDimTest {
   @NonNull private static final String FIRST_NAME = "first_name";
   @NonNull private static final String LAST_NAME = "last_name";
   @NonNull private static final String[] COLUMN_NAMES = { FIRST_NAME, LAST_NAME };

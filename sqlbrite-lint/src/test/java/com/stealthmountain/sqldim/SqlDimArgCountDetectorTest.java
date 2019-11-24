@@ -8,7 +8,7 @@ import org.junit.Test;
 import static com.android.tools.lint.checks.infrastructure.TestFiles.java;
 import static com.android.tools.lint.checks.infrastructure.TestLintTask.lint;
 
-public final class SqlBriteArgCountDetectorTest {
+public final class SqlDimArgCountDetectorTest {
     @SuppressWarnings("UnstableApiUsage")
     @NonNull private static final LintDetectorTest.TestFile BRITE_DATABASE_STUB =
             java(

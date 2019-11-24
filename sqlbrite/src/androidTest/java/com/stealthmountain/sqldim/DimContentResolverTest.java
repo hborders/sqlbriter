@@ -42,8 +42,8 @@ import io.reactivex.subjects.PublishSubject;
 
 import static com.google.common.truth.Truth.assertThat;
 
-public final class BriteContentResolverTest
-    extends ProviderTestCase2<BriteContentResolverTest.TestContentProvider> {
+public final class DimContentResolverTest
+    extends ProviderTestCase2<DimContentResolverTest.TestContentProvider> {
 
   @NonNull private static final Uri AUTHORITY = Objects.requireNonNull(Uri.parse("content://test_authority"));
 
@@ -59,7 +59,7 @@ public final class BriteContentResolverTest
   @Nullable private ContentResolver contentResolver;
   @Nullable private BriteContentResolver db;
 
-  public BriteContentResolverTest() {
+  public DimContentResolverTest() {
     super(TestContentProvider.class, AUTHORITY.getAuthority());
   }
 

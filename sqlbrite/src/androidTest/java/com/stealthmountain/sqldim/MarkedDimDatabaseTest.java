@@ -83,7 +83,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.fail;
 
-public final class MarkedBriteDatabaseTest {
+public final class MarkedDimDatabaseTest {
   @NonNull  private final TestDb testDb = new TestDb();
   @NonNull  private final List<String> logs = new ArrayList<>();
   @NonNull  private final MarkedRecordingObserver o = new MarkedRecordingObserver();
