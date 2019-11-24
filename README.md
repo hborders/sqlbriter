@@ -1,39 +1,29 @@
-SQL Brite
+SQL Dim
 =========
 
 A lightweight wrapper around `SupportSQLiteOpenHelper` and `ContentResolver` which introduces reactive
 stream semantics to queries.
 
-# Deprecated
-
-This library is no longer actively developed and is considered complete.
-
-Its features (and far, far more) are now offered by [SQLDelight](https://github.com/square/sqldelight/)
-and its [upgrading guide](https://github.com/square/sqldelight/blob/1.0.0/UPGRADING.md) offers some
-migration help.
-
-
-
 Usage
 -----
 
-Create a `SqlBrite` instance which is an adapter for the library functionality.
+Create a `SqlDim` instance which is an adapter for the library functionality.
 
 ```java
-SqlBrite sqlBrite = new SqlBrite.Builder().build();
+SqlDim<Object> sqlDim = new SqlDim.Builder<>().build();
 ```
 
-Pass a `SupportSQLiteOpenHelper` instance and a `Scheduler` to create a `BriteDatabase`.
+Pass a `SupportSQLiteOpenHelper` instance and a `Scheduler` to create a `DimDatabase`.
 
 ```java
-BriteDatabase db = sqlBrite.wrapDatabaseHelper(openHelper, Schedulers.io());
+DimDatabase<Object> db = sqlDim.wrapDatabaseHelper(openHelper, Schedulers.io());
 ```
 
 A `Scheduler` is required for a few reasons, but the most important is that query notifications can
 trigger on the thread of your choice. The query can then be run without blocking the main thread or
 the thread which caused the trigger.
 
-The `BriteDatabase.createQuery` method is similar to `SupportSQLiteDatabase.query` except it takes an
+The `DimDatabase.createQuery` method is similar to `SupportSQLiteDatabase.query` except it takes an
 additional parameter of table(s) on which to listen for changes. Subscribe to the returned
 `Observable<Query>` which will immediately notify with a `Query` to run.
 
@@ -67,7 +57,7 @@ db.insert("users", SQLiteDatabase.CONFLICT_ABORT, createUser("strong", "Alec Str
 System.out.println("Queries: " + queries.get()); // Prints 4
 ```
 
-In the previous example we re-used the `BriteDatabase` object "db" for inserts. All insert, update,
+In the previous example we re-used the `DimDatabase` object "db" for inserts. All insert, update,
 or delete operations must go through this object in order to correctly notify subscribers.
 
 Unsubscribe from the returned `Subscription` to stop getting updates.
@@ -101,7 +91,7 @@ users.subscribe(new Consumer<Query>() {
 });
 System.out.println("Queries: " + queries.get()); // Prints 1
 
-Transaction transaction = db.newTransaction();
+Transaction<Object> transaction = db.newTransaction();
 try {
   db.insert("users", SQLiteDatabase.CONFLICT_ABORT, createUser("jw", "Jake Wharton"));
   db.insert("users", SQLiteDatabase.CONFLICT_ABORT, createUser("mattp", "Matt Precious"));
@@ -126,11 +116,40 @@ users.debounce(500, MILLISECONDS).subscribe(new Consumer<Query>() {
 });
 ```
 
-The `SqlBrite` object can also wrap a `ContentResolver` for observing a query on another app's
+Additionally, you can use a `MarkedQuery` to observe specific change operations by marking them:
+
+```java
+Observable<MarkedQuery<Object>> markedUsers = db.createMarkedQuery("users", "SELECT * FROM users");
+
+final Set<Object> markers = Collections.synchronizedSet(new HashSet<>());
+markedUsers.subscribe(new Consumer<MarkedQuery<Object>>() {
+  @Override public void accept(MarkedQuery<Object> markedQuery) {
+    markers.addAll(markedQuery.markers);
+  }
+});
+System.out.println("Markers: " + markers); // Prints empty
+
+Transaction<Object> transaction = db.newTransaction();
+try {
+  db.insertMarked("marker1", "users", SQLiteDatabase.CONFLICT_ABORT, createUser("jw", "Jake Wharton"));
+  db.insertMarked("marker2", "users", SQLiteDatabase.CONFLICT_ABORT, createUser("mattp", "Matt Precious"));
+  db.insertMarked("marker3", "users", SQLiteDatabase.CONFLICT_ABORT, createUser("strong", "Alec Strong"));
+  transaction.markSuccessful("marker4");
+} finally {
+  transaction.end();
+}
+
+System.out.println("Markers: " + markers); // Prints some ordering of: marker1, marker2, marker3, marker4
+```
+
+You must subscribe to your `Observable<MarkedQuery<M>>` before performing your marked operation
+in order to observe markers.
+
+The `SqlDim` object can also wrap a `ContentResolver` for observing a query on another app's
 content provider.
 
 ```java
-BriteContentResolver resolver = sqlBrite.wrapContentProvider(contentResolver, Schedulers.io());
+DimContentResolver resolver = sqlDim.wrapContentProvider(contentResolver, Schedulers.io());
 Observable<Query> query = resolver.createQuery(/*...*/);
 ```
 
@@ -139,31 +158,28 @@ number of queries and data changes.
 
 
 
-Philosophy
-----------
+Philosophy and Lineage
+----------------------
 
-SQL Brite's only responsibility is to be a mechanism for coordinating and composing the notification
+SQL Dim's only responsibility is to be a mechanism for coordinating and composing the notification
 of updates to tables such that you can update queries as soon as data changes.
 
 This library is not an ORM. It is not a type-safe query mechanism. It won't serialize the same POJOs
 you use for Gson. It's not going to perform database migrations for you.
 
-Some of these features are offered by [SQL Delight][sqldelight] which can be used with SQL Brite.
+Some of these features are offered by [SQL Delight][sqldelight] which can be used with SQL Dim.
 
+SQL Dim is based on a deprecated library from Square, [SQL Brite][sqlbrite]. SQL Brite was
+deprecated in favor of [SQL Delight][sqldelight], but SQL Delight requires Kotlin. This is for
+people that don't want to use Kotlin.
 
 
 Download
 --------
 
 ```groovy
-implementation 'com.squareup.sqlbrite3:sqlbrite:3.2.0'
+implementation 'com.stealthmountain.sqldim:sqldim:4.0.0'
 ```
-
-For the 'kotlin' module that adds extension functions to `Observable<Query>`:
-```groovy
-implementation 'com.squareup.sqlbrite3:sqlbrite-kotlin:3.2.0'
-```
-
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
@@ -173,6 +189,7 @@ License
 -------
 
     Copyright 2015 Square, Inc.
+    Copyright 2019 Heath Borders
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -192,3 +209,4 @@ License
 
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/
  [sqldelight]: https://github.com/square/sqldelight/
+ [sqlbrite]: https://github.com/square/sqlbrite/

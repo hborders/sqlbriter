@@ -1,0 +1,15 @@
+apply plugin: 'java'
+
+dependencies {
+  compileOnly rootProject.ext.lintApi
+
+  testImplementation rootProject.ext.junit
+  testImplementation rootProject.ext.lint
+  testImplementation rootProject.ext.lintTests
+}
+
+jar {
+  manifest {
+    attributes("Lint-Registry-v2": "com.stealthmountain.sqldim.DimIssueRegistry")
+  }
+}

@@ -27,7 +27,7 @@ Version 3.1.0 *(2017-12-18)*
 Version 3.0.0 *(2017-11-28)*
 ----------------------------
 
-Group ID has changed to `com.squareup.sqlbrite3`.
+Group ID has changed to `sqldim`.
 
  * New: Build on top of the Android architecture components Sqlite support library. This allows swapping
    out the underlying Sqlite implementation to that of your choosing.
