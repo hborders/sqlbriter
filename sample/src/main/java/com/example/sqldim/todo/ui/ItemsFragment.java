@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.sqlbrite.todo.ui;
+package com.example.sqldim.todo.ui;
 
-import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -31,11 +30,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
-import com.example.sqlbrite.todo.R;
-import com.example.sqlbrite.todo.TodoApp;
-import com.example.sqlbrite.todo.db.Db;
-import com.example.sqlbrite.todo.db.TodoItem;
-import com.example.sqlbrite.todo.db.TodoList;
+import com.example.sqldim.todo.R;
+import com.example.sqldim.todo.TodoApp;
+import com.example.sqldim.todo.db.Db;
+import com.example.sqldim.todo.db.TodoItem;
+import com.example.sqldim.todo.db.TodoList;
 import com.jakewharton.rxbinding2.widget.AdapterViewItemClickEvent;
 import com.jakewharton.rxbinding2.widget.RxAdapterView;
 import com.squareup.sqlbrite3.BriteDatabase;

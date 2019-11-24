@@ -38,7 +38,7 @@ android {
   defaultConfig {
     minSdkVersion versions.minSdk
     targetSdkVersion versions.compileSdk
-    applicationId 'com.example.sqlbrite.todo'
+    applicationId 'com.example.sqldim.todo'
 
     versionCode 1
     versionName '1.0'

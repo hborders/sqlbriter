@@ -13,27 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.sqlbrite.todo;
+package com.example.sqldim.todo;
 
-import android.app.Application;
-import com.example.sqlbrite.todo.db.DbModule;
-import dagger.Module;
-import dagger.Provides;
+import com.example.sqldim.todo.ui.ItemsFragment;
+import com.example.sqldim.todo.ui.ListsFragment;
+import com.example.sqldim.todo.ui.NewItemFragment;
+import com.example.sqldim.todo.ui.NewListFragment;
+import dagger.Component;
 import javax.inject.Singleton;
 
-@Module(
-    includes = {
-        DbModule.class,
-    }
-)
-public final class TodoModule {
-  private final Application application;
+@Singleton
+@Component(modules = TodoModule.class)
+public interface TodoComponent {
 
-  TodoModule(Application application) {
-    this.application = application;
-  }
+  void inject(ListsFragment fragment);
 
-  @Provides @Singleton Application provideApplication() {
-    return application;
-  }
+  void inject(ItemsFragment fragment);
+
+  void inject(NewItemFragment fragment);
+
+  void inject(NewListFragment fragment);
 }

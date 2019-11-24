@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.sqlbrite.todo.db;
+package com.example.sqldim.todo.db;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -25,8 +25,6 @@ import com.google.auto.value.AutoValue;
 
 import java.util.Objects;
 import com.squareup.sqlbrite3.FunctionRR;
-
-import io.reactivex.functions.Function;
 
 @AutoValue
 public abstract class TodoItem implements Parcelable {

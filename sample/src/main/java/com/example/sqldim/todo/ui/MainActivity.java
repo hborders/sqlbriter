@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.sqlbrite.todo.ui;
+package com.example.sqldim.todo.ui;
 
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentActivity;
-import com.example.sqlbrite.todo.R;
+import com.example.sqldim.todo.R;
 
 public final class MainActivity extends FragmentActivity
     implements ListsFragment.Listener, ItemsFragment.Listener {

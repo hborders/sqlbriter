@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.sqlbrite.todo.ui;
+package com.example.sqldim.todo.ui;
 
 import android.content.Context;
 import android.text.SpannableString;
@@ -27,7 +27,7 @@ import android.widget.CheckedTextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.example.sqlbrite.todo.db.TodoItem;
+import com.example.sqldim.todo.db.TodoItem;
 import io.reactivex.functions.Consumer;
 import java.util.Collections;
 import java.util.List;

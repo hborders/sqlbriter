@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.sqlbrite.todo.ui;
+package com.example.sqldim.todo.ui;
 
 import android.database.Cursor;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
-import com.example.sqlbrite.todo.db.Db;
-import com.example.sqlbrite.todo.db.TodoItem;
-import com.example.sqlbrite.todo.db.TodoList;
+import com.example.sqldim.todo.db.Db;
+import com.example.sqldim.todo.db.TodoItem;
+import com.example.sqldim.todo.db.TodoList;
 import com.google.auto.value.AutoValue;
 import com.squareup.sqlbrite3.FunctionRR;
 
-import io.reactivex.functions.Function;
 import java.util.Arrays;
 import java.util.Collection;
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.sqlbrite.todo.db;
+package com.example.sqldim.todo.db;
 
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.sqlite.db.SupportSQLiteOpenHelper;
@@ -80,25 +80,29 @@ final class DbCallback extends SupportSQLiteOpenHelper.Callback {
         .description("Pogs for Matt P.")
         .build());
     db.insert(TodoItem.TABLE, CONFLICT_FAIL, new TodoItem.Builder()
-        .listId(holidayPresentsListId)
-        .description("Cola for Jesse W.")
-        .build());
+            .listId(holidayPresentsListId)
+            .description("Cola for Jesse W.")
+            .build());
+    db.insert(TodoItem.TABLE, CONFLICT_FAIL, new TodoItem.Builder()
+            .listId(holidayPresentsListId)
+            .description("SNES for Heath B.")
+            .build());
 
     long workListId = db.insert(TodoList.TABLE, CONFLICT_FAIL, new TodoList.Builder()
         .name("Work Items")
         .build());
     db.insert(TodoItem.TABLE, CONFLICT_FAIL, new TodoItem.Builder()
         .listId(workListId)
-        .description("Finish SqlBrite library")
+        .description("Finish SqlDim library")
         .complete(true)
         .build());
     db.insert(TodoItem.TABLE, CONFLICT_FAIL, new TodoItem.Builder()
         .listId(workListId)
-        .description("Finish SqlBrite sample app")
+        .description("Finish SqlDim sample app")
         .build());
     db.insert(TodoItem.TABLE, CONFLICT_FAIL, new TodoItem.Builder()
         .listId(workListId)
-        .description("Publish SqlBrite to GitHub")
+        .description("Publish SqlDim to GitHub")
         .build());
 
     long birthdayPresentsListId = db.insert(TodoList.TABLE, CONFLICT_FAIL, new TodoList.Builder()
