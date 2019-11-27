@@ -13,6 +13,7 @@ buildscript {
 
   dependencies {
     classpath 'com.android.tools.build:gradle:3.5.2'
+    classpath 'com.vanniktech:gradle-maven-publish-plugin:0.8.0'
   }
 }
 
@@ -64,20 +65,3 @@ ext {
   checkerJdk8 = "org.checkerframework:jdk8:${checkerFrameworkVersion}"
   errorproneJavac = "com.google.errorprone:javac:9+181-r4173-1"
 }
-
-configurations {
-  osstrich
-}
-dependencies {
-  osstrich 'com.squareup.osstrich:osstrich:1.4.0'
-}
-task publishV4Javadoc(type: JavaExec) {
-  classpath = configurations.osstrich
-  main = 'com.squareup.osstrich.JavadocPublisher'
-  args = [
-      'build/javadoc',
-      'https://github.com/hborders/sqldim',
-      'com.stealthmountain.sqldim'
-  ]
-}
-task publishJavadoc(dependsOn: [publishV4Javadoc])
