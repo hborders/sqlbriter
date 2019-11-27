@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+Version 4.0.0 *(2019-11-27)*
+----------------------------
+
+* New: Renamed to com.stealthmountain.sqldim
+* New: Added MarkedQuery and affiliated marked CRUD methods
+* Fix: Updated Dependent Libraries
+
 Version 3.2.0 *(2018-03-05)*
 ----------------------------
 
