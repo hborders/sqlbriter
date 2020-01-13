@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 4.1.0 *(2020-01-12)*
+----------------------------
+
+* New: Added DimDatabase#triggerMarked API
+* Fix: Updated Dependent Libraries
+
 Version 4.0.0 *(2019-11-27)*
 ----------------------------
 
