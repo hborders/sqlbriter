@@ -621,22 +621,90 @@ public final class MarkedDimDatabaseTest {
     db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
     o.assertEmptyMarkers();
     o.assertCursor()
-        .hasRow("alice", "Alice Allison")
-        .hasRow("bob", "Bob Bobberson")
-        .hasRow("eve", "Eve Evenson")
-        .isExhausted();
+            .hasRow("alice", "Alice Allison")
+            .hasRow("bob", "Bob Bobberson")
+            .hasRow("eve", "Eve Evenson")
+            .isExhausted();
 
     db.executeAndTriggerMarked("marker", TABLE_EMPLOYEE,
             "UPDATE " + TABLE_EMPLOYEE + " SET " + NAME + " = 'Zach'");
     o.assertMarkersEquals("marker");
     o.assertCursor()
-        .hasRow("alice", "Zach")
-        .hasRow("bob", "Zach")
-        .hasRow("eve", "Zach")
-        .isExhausted();
+            .hasRow("alice", "Zach")
+            .hasRow("bob", "Zach")
+            .hasRow("eve", "Zach")
+            .isExhausted();
   }
 
   @Test public void executeAndTriggerMarkedMultipleTables() {
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
+
+    db.createMarkedQuery(TABLE_MANAGER, SELECT_MANAGER_LIST).subscribe(o);
+    o.assertEmptyMarkers();
+    o.assertCursor()
+            .hasRow("Eve Evenson", "Alice Allison")
+            .isExhausted();
+    @Nonnull final MarkedRecordingObserver employeeObserver = new MarkedRecordingObserver();
+    db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(employeeObserver);
+    employeeObserver.assertEmptyMarkers();
+    employeeObserver.assertCursor()
+            .hasRow("alice", "Alice Allison")
+            .hasRow("bob", "Bob Bobberson")
+            .hasRow("eve", "Eve Evenson")
+            .isExhausted();
+
+    @NonNull final Set<String> tablesToTrigger = Collections.unmodifiableSet(new HashSet<>(BOTH_TABLES));
+    db.executeAndTriggerMarked("marker", tablesToTrigger,
+            "UPDATE " + TABLE_EMPLOYEE + " SET " + NAME + " = 'Zach'");
+
+    o.assertMarkersEquals("marker");
+    o.assertCursor()
+            .hasRow("Zach", "Zach")
+            .isExhausted();
+    employeeObserver.assertMarkersEquals("marker");
+    employeeObserver.assertCursor()
+            .hasRow("alice", "Zach")
+            .hasRow("bob", "Zach")
+            .hasRow("eve", "Zach")
+            .isExhausted();
+  }
+
+  @Test public void executeAndTriggerMarkedWithNoTables() {
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
+
+    db.createMarkedQuery(TABLE_MANAGER, SELECT_MANAGER_LIST).subscribe(o);
+    o.assertEmptyMarkers();
+    o.assertCursor()
+            .hasRow("Eve Evenson", "Alice Allison")
+            .isExhausted();
+
+    db.executeAndTriggerMarked("marker", Collections.<String>emptySet(),
+            "UPDATE " + TABLE_EMPLOYEE + " SET " + NAME + " = 'Zach'");
+
+    o.assertNoMoreEvents();
+  }
+
+  @Test public void triggerMarked() {
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
+
+    db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES).subscribe(o);
+    o.assertEmptyMarkers();
+    o.assertCursor()
+        .hasRow("alice", "Alice Allison")
+        .hasRow("bob", "Bob Bobberson")
+        .hasRow("eve", "Eve Evenson")
+        .isExhausted();
+
+    db.triggerMarked("marker", TABLE_EMPLOYEE);
+    o.assertMarkersEquals("marker");
+    o.assertCursor()
+        .hasRow("alice", "Alice Allison")
+        .hasRow("bob", "Bob Bobberson")
+        .hasRow("eve", "Eve Evenson")
+        .isExhausted();
+  }
+
+  @Test public void triggerMarkedMultipleTables() {
     @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     db.createMarkedQuery(TABLE_MANAGER, SELECT_MANAGER_LIST).subscribe(o);
@@ -654,22 +722,21 @@ public final class MarkedDimDatabaseTest {
         .isExhausted();
 
     @NonNull final Set<String> tablesToTrigger = Collections.unmodifiableSet(new HashSet<>(BOTH_TABLES));
-    db.executeAndTriggerMarked("marker", tablesToTrigger,
-            "UPDATE " + TABLE_EMPLOYEE + " SET " + NAME + " = 'Zach'");
+    db.triggerMarked("marker", tablesToTrigger);
 
     o.assertMarkersEquals("marker");
     o.assertCursor()
-        .hasRow("Zach", "Zach")
+        .hasRow("Eve Evenson", "Alice Allison")
         .isExhausted();
     employeeObserver.assertMarkersEquals("marker");
     employeeObserver.assertCursor()
-        .hasRow("alice", "Zach")
-        .hasRow("bob", "Zach")
-        .hasRow("eve", "Zach")
+        .hasRow("alice", "Alice Allison")
+        .hasRow("bob", "Bob Bobberson")
+        .hasRow("eve", "Eve Evenson")
         .isExhausted();
   }
 
-  @Test public void executeAndTriggerMarkedWithNoTables() {
+  @Test public void triggerMarkedWithNoTables() {
     @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     db.createMarkedQuery(TABLE_MANAGER, SELECT_MANAGER_LIST).subscribe(o);
@@ -678,8 +745,7 @@ public final class MarkedDimDatabaseTest {
         .hasRow("Eve Evenson", "Alice Allison")
         .isExhausted();
 
-    db.executeAndTriggerMarked("marker", Collections.<String>emptySet(),
-            "UPDATE " + TABLE_EMPLOYEE + " SET " + NAME + " = 'Zach'");
+    db.triggerMarked("marker", Collections.emptySet());
 
     o.assertNoMoreEvents();
   }

@@ -893,6 +893,27 @@ public final class DimDatabase<M> implements Closeable {
   }
 
   /**
+   * Force a notification to queries for {@code table} with the given marker.
+   *
+   * This is probably only useful when a query observer expects a marker, but no mutation
+   * operation is possible.
+   */
+  @WorkerThread
+  public void triggerMarked(@NonNull M marker, @NonNull String table) {
+    triggerMarked(marker, Collections.singleton(table));
+  }
+
+  /**
+   * See {@link #triggerMarked(Object, String)} for usage. This overload allows for triggering multiple tables.
+   *
+   * @see DimDatabase#triggerMarked(Object, String)
+   */
+  @WorkerThread
+  public void triggerMarked(@NonNull M marker, @NonNull Set<String> tables) {
+    sendTableTrigger(Collections.singleton(marker), tables);
+  }
+
+  /**
    * Execute {@code statement}, if the the number of rows affected by execution of this SQL
    * statement is of any importance to the caller - for example, UPDATE / DELETE SQL statements.
    *
