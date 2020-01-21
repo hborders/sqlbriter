@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+Version 4.2.0 *(2020-01-20)*
+----------------------------
+
+* New: Added QueryObservable#mapToSpecificList API
+* New: Added MarkedQueryObservable#mapToSpecificList API
+
+Removed CLA contribution requirement.
+Added `assembleCheckTypes` to `RELEASING` and `CONTRIBUTING` instructions.
+
 Version 4.1.0 *(2020-01-12)*
 ----------------------------
 
