@@ -247,6 +247,20 @@ public final class MarkedDimDatabaseTest {
             new Employee("eve", "Eve Evenson"));
   }
 
+  @Test public void emptyMarkedQueryMapToSpecificList() {
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
+
+    @NonNull final MarkedValue<String, ArrayList<Employee>> employeesMarkedValue =
+            db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
+                    .mapToSpecificList(Employee.MARKED_MAPPER, ArrayList::new)
+                    .blockingFirst();
+    assertThat(employeesMarkedValue.markers).isEmpty();
+    assertThat(employeesMarkedValue.value).containsExactly( //
+            new Employee("alice", "Alice Allison"), //
+            new Employee("bob", "Bob Bobberson"), //
+            new Employee("eve", "Eve Evenson"));
+  }
+
   @Test public void markedQueryMapToList() {
     @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
@@ -264,6 +278,30 @@ public final class MarkedDimDatabaseTest {
           new Employee("bob", "Bob Bobberson"), //
           new Employee("eve", "Eve Evenson"), //
           new Employee("john", "John Johnson") //
+        )
+      )
+    );
+  }
+
+  @Test public void markedQueryMapToSpecificList() {
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
+
+    @NonNull final TestObserver<MarkedValue<String, ArrayList<Employee>>> t = new TestObserver<>();
+    db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
+            .mapToSpecificList(Employee.MARKED_MAPPER, ArrayList::new)
+            .skip(1)
+            .subscribe(t);
+
+    db.insertMarked("marker", TABLE_EMPLOYEE, CONFLICT_NONE, employee("john", "John Johnson"));
+    t.assertValue(new MarkedValue<>(
+        "marker",
+        new ArrayList<>(
+          Arrays.asList(
+            new Employee("alice", "Alice Allison"), //
+            new Employee("bob", "Bob Bobberson"), //
+            new Employee("eve", "Eve Evenson"), //
+            new Employee("john", "John Johnson") //
+          )
         )
       )
     );

@@ -34,6 +34,7 @@ import io.reactivex.ObservableTransformer;
 import io.reactivex.Scheduler;
 import io.reactivex.functions.BiFunction;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -152,15 +153,15 @@ public final class SqlDim<M> {
       @NonNull public final Set<M> markers;
       @NonNull public final V value;
 
-      MarkedValue(@NonNull V value) {
+      public MarkedValue(@NonNull V value) {
         this(Collections.emptySet(), value);
       }
 
-      MarkedValue(@NonNull M marker, @NonNull V value) {
+      public MarkedValue(@NonNull M marker, @NonNull V value) {
         this(Collections.singleton(marker), value);
       }
 
-      MarkedValue(@NonNull Set<M> markers, @NonNull V value) {
+      public MarkedValue(@NonNull Set<M> markers, @NonNull V value) {
         this.markers = markers;
         this.value = value;
       }
@@ -269,7 +270,26 @@ public final class SqlDim<M> {
     @CheckResult @NonNull
     public static <M, T> ObservableOperator<MarkedValue<M, List<T>>, MarkedQuery<M>> mapToList(
         @NonNull BiFunction<Cursor, Set<M>, T> mapper) {
-      return new MarkedQueryToListOperator<>(mapper);
+      return new MarkedQueryToListOperator<>(mapper, ArrayList::new);
+    }
+
+    /**
+     * Creates an {@linkplain ObservableOperator operator} which transforms a query to a
+     * {@code List<T>} using {@code mapper}. Use with {@link Observable#lift}.
+     * <p>
+     * Be careful using this operator as it will always consume the entire cursor and create objects
+     * for each row, every time this observable emits a new query. On tables whose queries update
+     * frequently or very large result sets this can result in the creation of many objects.
+     * <p>
+     * This operator ignores {@code null} cursors returned from {@link #run()}.
+     *
+     * @param mapper Maps the current {@link Cursor} row and markers {@code M} to {@code T}. May not return null.
+     * @param newList Creates the new list. May not return null.
+     */
+    @CheckResult @NonNull
+    public static <M, L extends List<T>, T> ObservableOperator<MarkedValue<M, L>, MarkedQuery<M>> mapToSpecificList(
+        @NonNull BiFunction<Cursor, Set<M>, T> mapper, @NonNull NewList<L, T> newList) {
+      return new MarkedQueryToListOperator<>(mapper, newList);
     }
 
     /**
@@ -429,7 +449,26 @@ public final class SqlDim<M> {
     @CheckResult @NonNull
     public static <T> ObservableOperator<List<T>, Query> mapToList(
         @NonNull FunctionRR<Cursor, T> mapper) {
-      return new QueryToListOperator<>(mapper);
+      return new QueryToListOperator<>(mapper, ArrayList::new);
+    }
+
+    /**
+     * Creates an {@linkplain ObservableOperator operator} which transforms a query to a
+     * {@code List<T>} using {@code mapper}. Use with {@link Observable#lift}.
+     * <p>
+     * Be careful using this operator as it will always consume the entire cursor and create objects
+     * for each row, every time this observable emits a new query. On tables whose queries update
+     * frequently or very large result sets this can result in the creation of many objects.
+     * <p>
+     * This operator ignores {@code null} cursors returned from {@link #run()}.
+     *
+     * @param mapper Maps the current {@link Cursor} row to {@code T}. May not return null.
+     * @param newList Creates the new list. May not return null.
+     */
+    @CheckResult @NonNull
+    public static <L extends List<T>, T> ObservableOperator<L, Query> mapToSpecificList(
+        @NonNull FunctionRR<Cursor, T> mapper, @NonNull NewList<L, T> newList) {
+      return new QueryToListOperator<>(mapper, newList);
     }
 
     /**

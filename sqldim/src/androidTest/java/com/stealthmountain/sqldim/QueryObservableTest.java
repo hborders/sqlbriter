@@ -25,6 +25,8 @@ import io.reactivex.Observable;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
+
 public final class QueryObservableTest {
   @Test public void mapToListThrowsFromQueryRun() {
     @NonNull final IllegalStateException error = new IllegalStateException("test exception");
@@ -39,6 +41,24 @@ public final class QueryObservableTest {
             throw new AssertionError("Must not be called");
           }
         }) //
+        .test() //
+        .assertNoValues() //
+        .assertError(error);
+  }
+
+  @Test public void mapToSpecificListThrowsFromQueryRun() {
+    @NonNull final IllegalStateException error = new IllegalStateException("test exception");
+    @NonNull final Query query = new Query() {
+      @Override public Cursor run() {
+        throw error;
+      }
+    };
+    new QueryObservable(Observable.just(query)) //
+        .mapToSpecificList(new FunctionRR<Cursor, Object>() {
+          @NonNull @Override public Object applyRR(@NonNull Cursor cursor) {
+            throw new AssertionError("Must not be called");
+          }
+        }, ArrayList::new) //
         .test() //
         .assertNoValues() //
         .assertError(error);
@@ -60,6 +80,27 @@ public final class QueryObservableTest {
             throw error;
           }
         }) //
+        .test() //
+        .assertNoValues() //
+        .assertError(error);
+  }
+
+  @Test public void mapToSpecificListThrowsFromMapFunction() {
+    @NonNull final Query query = new Query() {
+      @Override public Cursor run() {
+        @NonNull final MatrixCursor cursor = new MatrixCursor(new String[] { "col1" });
+        cursor.addRow(new Object[] { "value1" });
+        return cursor;
+      }
+    };
+
+    @NonNull final IllegalStateException error = new IllegalStateException("test exception");
+    new QueryObservable(Observable.just(query)) //
+        .mapToSpecificList(new FunctionRR<Cursor, Object>() {
+          @NonNull @Override public Object applyRR(@NonNull Cursor cursor) {
+            throw error;
+          }
+        }, ArrayList::new) //
         .test() //
         .assertNoValues() //
         .assertError(error);

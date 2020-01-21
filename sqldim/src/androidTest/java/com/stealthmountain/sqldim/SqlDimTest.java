@@ -182,7 +182,7 @@ public final class SqlDimTest {
       this.last = last;
     }
 
-    @Override public boolean equals(Object o) {
+    @Override public boolean equals(@Nullable Object o) {
       if (o == this) return true;
       if (!(o instanceof Name)) return false;
       @NonNull final Name other = (Name) o;

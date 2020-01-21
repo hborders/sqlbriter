@@ -142,4 +142,32 @@ public final class MarkedQueryObservable<M> extends Observable<MarkedQuery<M>> {
   public final <T> Observable<MarkedValue<M, List<T>>> mapToList(@NonNull BiFunction<Cursor, Set<M>, T> mapper) {
     return lift(MarkedQuery.mapToList(mapper));
   }
+
+  /**
+   * Given a function mapping the current row of a {@link Cursor} and the marker to {@code T}, transform each
+   * emitted {@link MarkedQuery} to a {@code List<T>}.
+   * <p>
+   * Be careful using this operator as it will always consume the entire cursor and create objects
+   * for each row, every time this observable emits a new query. On tables whose queries update
+   * frequently or very large result sets this can result in the creation of many objects.
+   * <p>
+   * This method is equivalent to:
+   * <pre>{@code
+   * flatMap(q -> q.asRows(mapper).toList())
+   * }</pre>
+   * and a convenience operator for:
+   * <pre>{@code
+   * lift(Query.mapToList(mapper))
+   * }</pre>
+   * <p>
+   * Consider using {@link MarkedQuery#asRows} if you need to limit or filter in memory.
+   *
+   * @param mapper Maps the current {@link Cursor} row and the marker to {@code T}. May not return null.
+   * @param newList Creates the new list. May not return null.
+   */
+  @CheckResult @NonNull
+  public final <L extends List<T>, T> Observable<MarkedValue<M, L>> mapToSpecificList(
+          @NonNull BiFunction<Cursor, Set<M>, T> mapper, NewList<L, T> newList) {
+    return lift(MarkedQuery.mapToSpecificList(mapper, newList));
+  }
 }

@@ -20,47 +20,55 @@ import android.database.Cursor;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.stealthmountain.sqldim.SqlDim.Query;
+
+import java.util.List;
+
 import io.reactivex.ObservableOperator;
 import io.reactivex.Observer;
 import io.reactivex.exceptions.Exceptions;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.plugins.RxJavaPlugins;
-import java.util.ArrayList;
-import java.util.List;
 
-final class QueryToListOperator<T> implements ObservableOperator<List<T>, SqlDim.Query> {
+final class QueryToListOperator<L extends List<T>, T> implements ObservableOperator<L, Query> {
+
   @NonNull private final FunctionRR<Cursor, T> mapper;
+  @NonNull private final NewList<L, T> newList;
 
-  QueryToListOperator(@NonNull FunctionRR<Cursor, T> mapper) {
+  QueryToListOperator(@NonNull FunctionRR<Cursor, T> mapper, @NonNull NewList<L, T> newList) {
     this.mapper = mapper;
+    this.newList = newList;
   }
 
   @NonNull @Override
-  public Observer<? super SqlDim.Query> apply(@NonNull Observer<? super List<T>> observer) {
-    return new MappingObserver<>(observer, mapper);
+  public Observer<? super Query> apply(@NonNull Observer<? super L> observer) {
+    return new MappingObserver<>(observer, mapper, newList);
   }
 
-  static final class MappingObserver<T> extends DisposableObserver<SqlDim.Query> {
-    @NonNull private final Observer<? super List<T>> downstream;
+  static final class MappingObserver<L extends List<T>, T> extends DisposableObserver<Query> {
+    @NonNull private final Observer<? super L> downstream;
     @NonNull private final FunctionRR<Cursor, T> mapper;
+    @NonNull private final NewList<L, T> newList;
 
-    MappingObserver(@NonNull Observer<? super List<T>> downstream, @NonNull FunctionRR<Cursor, T> mapper) {
+    MappingObserver(@NonNull Observer<? super L> downstream,
+                    @NonNull FunctionRR<Cursor, T> mapper, @NonNull NewList<L, T> newList) {
       this.downstream = downstream;
       this.mapper = mapper;
+      this.newList = newList;
     }
 
     @Override protected void onStart() {
       downstream.onSubscribe(this);
     }
 
-    @Override public void onNext(@NonNull SqlDim.Query query) {
+    @Override public void onNext(@NonNull Query query) {
       try {
         @Nullable T item;
         @Nullable final Cursor cursor = query.run();
         if (cursor == null || isDisposed()) {
           return;
         }
-        @NonNull final List<T> items = new ArrayList<>(cursor.getCount());
+        @NonNull final L items = newList.newList(cursor.getCount());
         try {
           while (cursor.moveToNext()) {
             item = mapper.applyRR(cursor);

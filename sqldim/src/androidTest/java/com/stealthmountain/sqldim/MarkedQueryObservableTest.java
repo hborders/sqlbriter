@@ -24,6 +24,7 @@ import com.stealthmountain.sqldim.SqlDim.MarkedQuery;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
 
@@ -49,6 +50,24 @@ public final class MarkedQueryObservableTest {
         .assertError(error);
   }
 
+  @Test public void mapToSpecificListThrowsFromQueryRun() {
+    @NonNull final IllegalStateException error = new IllegalStateException("test exception");
+    @NonNull final MarkedQuery<String> markedQuery = new MarkedQuery<String>(Collections.emptySet()) {
+      @Override public Cursor run() {
+        throw error;
+      }
+    };
+    new MarkedQueryObservable<String>(Observable.just(markedQuery)) //
+        .mapToSpecificList(new BiFunction<Cursor, Set<String>, Object>() {
+          @NonNull @Override public Object apply(@NonNull Cursor cursor, @NonNull Set<String> markers) {
+            throw new AssertionError("Must not be called");
+          }
+        }, ArrayList::new) //
+        .test() //
+        .assertNoValues() //
+        .assertError(error);
+  }
+
   @Test public void mapToListThrowsFromMapFunction() {
     @NonNull final MarkedQuery<String> markedQuery = new MarkedQuery<String>(Collections.emptySet()) {
       @Override public Cursor run() {
@@ -65,6 +84,27 @@ public final class MarkedQueryObservableTest {
             throw error;
           }
         }) //
+        .test() //
+        .assertNoValues() //
+        .assertError(error);
+  }
+
+  @Test public void mapToSpecificListThrowsFromMapFunction() {
+    @NonNull final MarkedQuery<String> markedQuery = new MarkedQuery<String>(Collections.emptySet()) {
+      @Override public Cursor run() {
+        @NonNull final MatrixCursor cursor = new MatrixCursor(new String[] { "col1" });
+        cursor.addRow(new Object[] { "value1" });
+        return cursor;
+      }
+    };
+
+    @NonNull final IllegalStateException error = new IllegalStateException("test exception");
+    new MarkedQueryObservable<String>(Observable.just(markedQuery)) //
+        .mapToSpecificList(new BiFunction<Cursor, Set<String>, Object>() {
+          @NonNull @Override public Object apply(@NonNull Cursor cursor, @NonNull Set<String> markers) {
+            throw error;
+          }
+        }, ArrayList::new) //
         .test() //
         .assertNoValues() //
         .assertError(error);

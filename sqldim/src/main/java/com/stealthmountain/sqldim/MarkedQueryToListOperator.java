@@ -34,26 +34,30 @@ import io.reactivex.plugins.RxJavaPlugins;
 import static com.stealthmountain.sqldim.SqlDim.MarkedQuery;
 import static com.stealthmountain.sqldim.SqlDim.MarkedQuery.MarkedValue;
 
-final class MarkedQueryToListOperator<M, T> implements ObservableOperator<MarkedValue<M, List<T>>, MarkedQuery<M>> {
+final class MarkedQueryToListOperator<M, L extends List<T>, T> implements ObservableOperator<MarkedValue<M, L>, MarkedQuery<M>> {
   @NonNull private final BiFunction<Cursor, Set<M>, T> mapper;
+  @NonNull private final NewList<L, T> newList;
 
-  MarkedQueryToListOperator(@NonNull BiFunction<Cursor, Set<M>, T> mapper) {
+  MarkedQueryToListOperator(@NonNull BiFunction<Cursor, Set<M>, T> mapper, @NonNull NewList<L, T> newList) {
     this.mapper = mapper;
+    this.newList = newList;
   }
 
   @NonNull @Override
-  public Observer<? super MarkedQuery<M>> apply(@NonNull Observer<? super MarkedValue<M, List<T>>> observer) {
-    return new MappingObserver<>(observer, mapper);
+  public Observer<? super MarkedQuery<M>> apply(@NonNull Observer<? super MarkedValue<M, L>> observer) {
+    return new MappingObserver<>(observer, mapper, newList);
   }
 
-  static final class MappingObserver<M, T> extends DisposableObserver<MarkedQuery<M>> {
-    @NonNull private final Observer<? super MarkedValue<M, List<T>>> downstream;
+  static final class MappingObserver<M, L extends List<T>, T> extends DisposableObserver<MarkedQuery<M>> {
+    @NonNull private final Observer<? super MarkedValue<M, L>> downstream;
     @NonNull private final BiFunction<Cursor, Set<M>, T> mapper;
+    @NonNull private final NewList<L, T> newList;
 
-    MappingObserver(@NonNull Observer<? super MarkedValue<M, List<T>>> downstream,
-                    @NonNull BiFunction<Cursor, Set<M>, T> mapper) {
+    MappingObserver(@NonNull Observer<? super MarkedValue<M, L>> downstream,
+                    @NonNull BiFunction<Cursor, Set<M>, T> mapper, @NonNull NewList<L, T> newList) {
       this.downstream = downstream;
       this.mapper = mapper;
+      this.newList = newList;
     }
 
     @Override protected void onStart() {
@@ -67,7 +71,7 @@ final class MarkedQueryToListOperator<M, T> implements ObservableOperator<Marked
         if (cursor == null || isDisposed()) {
           return;
         }
-        @NonNull final List<T> items = new ArrayList<>(cursor.getCount());
+        @NonNull final L items = newList.newList(cursor.getCount());
         @NonNull final Set<M> markers = markedQuery.markers;
         try {
           while (cursor.moveToNext()) {

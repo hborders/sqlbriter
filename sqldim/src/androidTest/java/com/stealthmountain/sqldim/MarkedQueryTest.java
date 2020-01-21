@@ -33,6 +33,7 @@ import com.stealthmountain.sqldim.TestDb.Employee;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -260,9 +261,20 @@ public final class MarkedQueryTest {
     @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     @NonNull final MarkedValue<String, List<Employee>> employeesMarkedValue =
-        db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " WHERE 1=2")
-            .lift(MarkedQuery.mapToList(MARKED_MAPPER))
-            .blockingFirst();
+            db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " WHERE 1=2")
+                    .lift(MarkedQuery.mapToList(MARKED_MAPPER))
+                    .blockingFirst();
+    assertThat(employeesMarkedValue.markers).isEmpty();
+    assertThat(employeesMarkedValue.value).isEmpty();
+  }
+
+  @Test public void emptyMarkedMapToSpecificListEmptyWhenNoRows() {
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
+
+    @NonNull final MarkedValue<String, ArrayList<Employee>> employeesMarkedValue =
+            db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " WHERE 1=2")
+                    .lift(MarkedQuery.mapToSpecificList(MARKED_MAPPER, ArrayList::new))
+                    .blockingFirst();
     assertThat(employeesMarkedValue.markers).isEmpty();
     assertThat(employeesMarkedValue.value).isEmpty();
   }
@@ -280,6 +292,21 @@ public final class MarkedQueryTest {
     db.insertMarked("marker", TABLE_EMPLOYEE, CONFLICT_NONE, employee("john", "John Johnson"));
 
     t.assertValue(new MarkedValue<>("marker", Collections.emptyList()));
+  }
+
+  @Test public void markedMapToSpecificListEmptyWhenNoRows() {
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
+
+    TestObserver<MarkedValue<String, ArrayList<Employee>>> t = new TestObserver<>();
+
+    db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " WHERE 1=2")
+            .lift(MarkedQuery.mapToSpecificList(MARKED_MAPPER, ArrayList::new))
+            .skip(1)
+            .subscribe(t);
+
+    db.insertMarked("marker", TABLE_EMPLOYEE, CONFLICT_NONE, employee("john", "John Johnson"));
+
+    t.assertValue(new MarkedValue<>("marker", new ArrayList<>()));
   }
 
   @Test public void mapToListThrowsWhenMapperReturnsNull() {
@@ -305,6 +332,29 @@ public final class MarkedQueryTest {
     }
   }
 
+  @Test public void mapToSpecificListThrowsWhenMapperReturnsNull() {
+    @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
+
+    @NonNull final BiFunction<Cursor, Set<String>, Employee> mapToNull = new BiFunction<Cursor, Set<String>, Employee>() {
+      private int count;
+
+      @NonNull @Override public Employee apply(@NonNull Cursor cursor, @NonNull Set<String> markers) {
+        //noinspection ConstantConditions
+        return null;
+      }
+    };
+
+    try {
+      //noinspection ResultOfMethodCallIgnored
+      db.createMarkedQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES) //
+              .lift(MarkedQuery.mapToSpecificList(mapToNull, ArrayList::new)) //
+              .blockingFirst();
+      fail();
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessageThat().isEqualTo("QueryToList mapper returned null");
+    }
+  }
+
   @Test public void mapToListIgnoresNullCursor() {
     @NonNull final MarkedQuery<String> nully = new MarkedQuery<String>(Collections.emptySet()) {
       @Nullable @Override public Cursor run() {
@@ -315,6 +365,22 @@ public final class MarkedQueryTest {
     @NonNull final TestObserver<MarkedValue<String, List<Employee>>> subscriber = new TestObserver<>();
     Observable.just(nully)
         .lift(MarkedQuery.mapToList(MARKED_MAPPER))
+        .subscribe(subscriber);
+
+    subscriber.assertNoValues();
+    subscriber.assertComplete();
+  }
+
+  @Test public void mapToSpecificListIgnoresNullCursor() {
+    @NonNull final MarkedQuery<String> nully = new MarkedQuery<String>(Collections.emptySet()) {
+      @Nullable @Override public Cursor run() {
+        return null;
+      }
+    };
+
+    @NonNull final TestObserver<MarkedValue<String, ArrayList<Employee>>> subscriber = new TestObserver<>();
+    Observable.just(nully)
+        .lift(MarkedQuery.mapToSpecificList(MARKED_MAPPER, ArrayList::new))
         .subscribe(subscriber);
 
     subscriber.assertNoValues();

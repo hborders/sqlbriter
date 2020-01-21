@@ -82,7 +82,7 @@ final class TestDb extends SupportSQLiteOpenHelper.Callback {
       this.name = name;
     }
 
-    @Override public boolean equals(Object o) {
+    @Override public boolean equals(@Nullable Object o) {
       if (o == this) return true;
       if (!(o instanceof Employee)) return false;
       @NonNull final Employee other = (Employee) o;

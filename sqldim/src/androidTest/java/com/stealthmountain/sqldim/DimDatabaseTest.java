@@ -240,6 +240,18 @@ public final class DimDatabaseTest {
         new Employee("eve", "Eve Evenson"));
   }
 
+  @Test public void queryMapToSpecificList() {
+    @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
+
+    @NonNull final ArrayList<Employee> employees = db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES)
+        .mapToSpecificList(Employee.MAPPER, ArrayList::new)
+        .blockingFirst();
+    assertThat(employees).containsExactly( //
+        new Employee("alice", "Alice Allison"), //
+        new Employee("bob", "Bob Bobberson"), //
+        new Employee("eve", "Eve Evenson"));
+  }
+
   @Test public void queryMapToOne() {
     @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 

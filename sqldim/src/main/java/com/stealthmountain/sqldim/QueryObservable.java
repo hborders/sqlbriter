@@ -132,4 +132,32 @@ public final class QueryObservable extends Observable<Query> {
   public final <T> Observable<List<T>> mapToList(@NonNull FunctionRR<Cursor, T> mapper) {
     return lift(Query.mapToList(mapper));
   }
+
+  /**
+   * Given a function mapping the current row of a {@link Cursor} to {@code T}, transform each
+   * emitted {@link Query} to a {@code List<T>}.
+   * <p>
+   * Be careful using this operator as it will always consume the entire cursor and create objects
+   * for each row, every time this observable emits a new query. On tables whose queries update
+   * frequently or very large result sets this can result in the creation of many objects.
+   * <p>
+   * This method is equivalent to:
+   * <pre>{@code
+   * flatMap(q -> q.asRows(mapper).toList())
+   * }</pre>
+   * and a convenience operator for:
+   * <pre>{@code
+   * lift(Query.mapToList(mapper))
+   * }</pre>
+   * <p>
+   * Consider using {@link Query#asRows} if you need to limit or filter in memory.
+   *
+   * @param mapper Maps the current {@link Cursor} row to {@code T}. May not return null.
+   * @param newList Creates the new list. May not return null.
+   */
+  @CheckResult @NonNull
+  public final <L extends List<T>, T> Observable<L> mapToSpecificList(
+          @NonNull FunctionRR<Cursor, T> mapper, @NonNull NewList<L, T> newList) {
+    return lift(Query.mapToSpecificList(mapper, newList));
+  }
 }
