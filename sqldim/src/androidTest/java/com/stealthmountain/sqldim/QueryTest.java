@@ -27,16 +27,19 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.filters.SdkSuppress;
 import com.stealthmountain.sqldim.SqlDim.Query;
 import com.stealthmountain.sqldim.TestDb.Employee;
-import io.reactivex.Observable;
-import io.reactivex.observers.TestObserver;
-import io.reactivex.schedulers.Schedulers;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.functions.Function;
+import io.reactivex.rxjava3.observers.TestObserver;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+
 import static com.google.common.truth.Truth.assertThat;
+import static com.stealthmountain.sqldim.AssertErrorMessagePredicate.assertErrorMessage;
 import static com.stealthmountain.sqldim.TestDb.Employee.MAPPER;
 import static com.stealthmountain.sqldim.TestDb.SELECT_EMPLOYEES;
 import static com.stealthmountain.sqldim.TestDb.TABLE_EMPLOYEE;
@@ -55,7 +58,7 @@ public final class QueryTest {
     @NonNull final Factory factory = new FrameworkSQLiteOpenHelperFactory();
     @NonNull final SupportSQLiteOpenHelper helper = factory.create(configuration);
 
-    @NonNull final SqlDim<Object> sqlDim = new SqlDim.Builder<Object>().build();
+    @NonNull final SqlDim<Object> sqlDim = new SqlDim.Builder<>().build();
     db = sqlDim.wrapDatabaseHelper(helper, Schedulers.trampoline());
   }
 
@@ -72,14 +75,14 @@ public final class QueryTest {
     @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
-        .lift(Query.mapToOne(new FunctionRR<Cursor, Employee>() {
-          @NonNull @Override public Employee applyRR(@NonNull Cursor cursor) throws Exception {
+        .lift(Query.mapToOne(new Function<Cursor, Employee>() {
+          @NonNull @Override public Employee apply(@NonNull Cursor cursor) throws Exception {
             return null;
           }
         }))
         .test()
         .assertError(NullPointerException.class)
-        .assertErrorMessage("QueryToOne mapper returned null");
+        .assertError(assertErrorMessage("QueryToOne mapper returned null"));
   }
 
   @Test public void mapToOneThrowsOnMultipleRows() {
@@ -137,14 +140,14 @@ public final class QueryTest {
     @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
-        .lift(Query.mapToOneOrDefault(new FunctionRR<Cursor, Employee>() {
-          @NonNull @Override public Employee applyRR(@NonNull Cursor cursor) throws Exception {
+        .lift(Query.mapToOneOrDefault(new Function<Cursor, Employee>() {
+          @NonNull @Override public Employee apply(@NonNull Cursor cursor) throws Exception {
             return null;
           }
         }, new Employee("fred", "Fred Frederson")))
         .test()
         .assertError(NullPointerException.class)
-        .assertErrorMessage("QueryToOne mapper returned null");
+        .assertError(assertErrorMessage("QueryToOne mapper returned null"));
   }
 
   @Test public void mapToOneOrDefaultThrowsOnMultipleRows() {
@@ -204,10 +207,8 @@ public final class QueryTest {
   @Test public void mapToListThrowsWhenMapperReturnsNull() {
     @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
-    @NonNull final FunctionRR<Cursor, Employee> mapToNull = new FunctionRR<Cursor, Employee>() {
-      private int count;
-
-      @NonNull @Override public Employee applyRR(@NonNull Cursor cursor) throws Exception {
+    @NonNull final Function<Cursor, Employee> mapToNull = new Function<Cursor, Employee>() {
+      @NonNull @Override public Employee apply(@NonNull Cursor cursor) throws Exception {
         return null;
       }
     };
@@ -254,14 +255,14 @@ public final class QueryTest {
     @NonNull final DimDatabase<Object> db = Objects.requireNonNull(this.db);
 
     db.createQuery(TABLE_EMPLOYEE, SELECT_EMPLOYEES + " LIMIT 1")
-        .lift(Query.mapToOptional(new FunctionRR<Cursor, Employee>() {
-          @NonNull @Override public Employee applyRR(@NonNull Cursor cursor) throws Exception {
+        .lift(Query.mapToOptional(new Function<Cursor, Employee>() {
+          @NonNull @Override public Employee apply(@NonNull Cursor cursor) throws Exception {
             return null;
           }
         }))
         .test()
         .assertError(NullPointerException.class)
-        .assertErrorMessage("QueryToOne mapper returned null");
+        .assertError(assertErrorMessage("QueryToOne mapper returned null"));
   }
 
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.N)
@@ -272,7 +273,7 @@ public final class QueryTest {
         .lift(Query.mapToOptional(MAPPER))
         .test()
         .assertError(IllegalStateException.class)
-        .assertErrorMessage("Cursor returned more than 1 row");
+        .assertError(assertErrorMessage("Cursor returned more than 1 row"));
   }
 
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.N)

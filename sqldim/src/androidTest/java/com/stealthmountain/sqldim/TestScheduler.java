@@ -15,14 +15,16 @@
  */
 package com.stealthmountain.sqldim;
 
-import io.reactivex.Scheduler;
-import io.reactivex.annotations.NonNull;
-import io.reactivex.disposables.Disposable;
+import androidx.annotation.NonNull;
+
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.rxjava3.core.Scheduler;
+import io.reactivex.rxjava3.disposables.Disposable;
+
 final class TestScheduler extends Scheduler {
-  @NonNull private final io.reactivex.schedulers.TestScheduler delegate =
-      new io.reactivex.schedulers.TestScheduler();
+  @NonNull private final io.reactivex.rxjava3.schedulers.TestScheduler delegate =
+      new io.reactivex.rxjava3.schedulers.TestScheduler();
 
   private boolean runTasksImmediately = true;
 

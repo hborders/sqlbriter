@@ -10,7 +10,9 @@ dependencies {
   implementation rootProject.ext.timber
   implementation rootProject.ext.rxJava
   implementation rootProject.ext.rxAndroid
-  implementation rootProject.ext.rxBinding
+  // Removing RxBinding usage until it supports RxJava3
+  // https://github.com/JakeWharton/RxBinding/issues/531
+  // implementation rootProject.ext.rxBinding
 
   compileOnly rootProject.ext.autoValue
   annotationProcessor rootProject.ext.autoValue

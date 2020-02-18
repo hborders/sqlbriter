@@ -19,18 +19,20 @@ import android.database.Cursor;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import io.reactivex.ObservableOperator;
-import io.reactivex.Observer;
-import io.reactivex.exceptions.Exceptions;
-import io.reactivex.observers.DisposableObserver;
-import io.reactivex.plugins.RxJavaPlugins;
+
+import io.reactivex.rxjava3.core.ObservableOperator;
+import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.exceptions.Exceptions;
+import io.reactivex.rxjava3.functions.Function;
+import io.reactivex.rxjava3.observers.DisposableObserver;
+import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 
 final class QueryToOneOperator<T> implements ObservableOperator<T, SqlDim.Query> {
-  @NonNull private final FunctionRR<Cursor, T> mapper;
+  @NonNull private final Function<Cursor, T> mapper;
   @Nullable private final T defaultValue;
 
   /** A null {@code defaultValue} means nothing will be emitted when empty. */
-  QueryToOneOperator(@NonNull FunctionRR<Cursor, T> mapper, @Nullable T defaultValue) {
+  QueryToOneOperator(@NonNull Function<Cursor, T> mapper, @Nullable T defaultValue) {
     this.mapper = mapper;
     this.defaultValue = defaultValue;
   }
@@ -42,10 +44,10 @@ final class QueryToOneOperator<T> implements ObservableOperator<T, SqlDim.Query>
 
   static final class MappingObserver<T> extends DisposableObserver<SqlDim.Query> {
     @NonNull private final Observer<? super T> downstream;
-    @NonNull private final FunctionRR<Cursor, T> mapper;
+    @NonNull private final Function<Cursor, T> mapper;
     @Nullable private final T defaultValue;
 
-    MappingObserver(@NonNull Observer<? super T> downstream, @NonNull FunctionRR<Cursor, T> mapper,
+    MappingObserver(@NonNull Observer<? super T> downstream, @NonNull Function<Cursor, T> mapper,
                     @Nullable T defaultValue) {
       this.downstream = downstream;
       this.mapper = mapper;
@@ -63,7 +65,7 @@ final class QueryToOneOperator<T> implements ObservableOperator<T, SqlDim.Query>
         if (cursor != null) {
           try {
             if (cursor.moveToNext()) {
-              item = mapper.applyRR(cursor);
+              item = mapper.apply(cursor);
               // even though the type system should make this impossible,
               // Java doesn't always check nullability annotations,
               // so leave this in just in case our clients don't follow the rules.

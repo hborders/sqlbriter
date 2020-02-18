@@ -35,16 +35,17 @@ import com.example.sqldim.todo.TodoApp;
 import com.example.sqldim.todo.db.Db;
 import com.example.sqldim.todo.db.TodoItem;
 import com.example.sqldim.todo.db.TodoList;
-import com.jakewharton.rxbinding2.widget.AdapterViewItemClickEvent;
-import com.jakewharton.rxbinding2.widget.RxAdapterView;
+import com.example.sqldim.todo.rxbinding.AdapterViewItemClickEvent;
+import com.example.sqldim.todo.rxbinding.RxAdapterView;
 import com.stealthmountain.sqldim.DimDatabase;
-import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.functions.BiFunction;
-import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.functions.BiFunction;
+import io.reactivex.rxjava3.functions.Consumer;
+import io.reactivex.rxjava3.functions.Function;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+
 import javax.inject.Inject;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_NONE;

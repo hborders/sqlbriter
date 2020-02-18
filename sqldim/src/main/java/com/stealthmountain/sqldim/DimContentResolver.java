@@ -26,13 +26,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.stealthmountain.sqldim.SqlDim.Logger;
 import com.stealthmountain.sqldim.SqlDim.Query;
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.ObservableTransformer;
-import io.reactivex.Scheduler;
-import io.reactivex.functions.Cancellable;
 import java.util.Arrays;
+
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableEmitter;
+import io.reactivex.rxjava3.core.ObservableOnSubscribe;
+import io.reactivex.rxjava3.core.ObservableTransformer;
+import io.reactivex.rxjava3.core.Scheduler;
+import io.reactivex.rxjava3.functions.Cancellable;
 
 import static com.stealthmountain.sqldim.QueryObservable.QUERY_OBSERVABLE;
 import static java.lang.System.nanoTime;

@@ -24,10 +24,11 @@ import com.example.sqldim.todo.db.Db;
 import com.example.sqldim.todo.db.TodoItem;
 import com.example.sqldim.todo.db.TodoList;
 import com.google.auto.value.AutoValue;
-import com.stealthmountain.sqldim.FunctionRR;
 
 import java.util.Arrays;
 import java.util.Collection;
+
+import io.reactivex.rxjava3.functions.Function;
 
 @AutoValue
 abstract class ListsItem implements Parcelable {
@@ -51,8 +52,8 @@ abstract class ListsItem implements Parcelable {
   abstract String name();
   abstract int itemCount();
 
-  static FunctionRR<Cursor, ListsItem> MAPPER = new FunctionRR<Cursor, ListsItem>() {
-    @NonNull @Override public ListsItem applyRR(@NonNull Cursor cursor) {
+  static Function<Cursor, ListsItem> MAPPER = new Function<Cursor, ListsItem>() {
+    @NonNull @Override public ListsItem apply(@NonNull Cursor cursor) {
       long id = Db.getLong(cursor, TodoList.ID);
       String name = Db.getString(cursor, TodoList.NAME);
       int itemCount = Db.getInt(cursor, ITEM_COUNT);

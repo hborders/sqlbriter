@@ -30,26 +30,28 @@ allprojects {
 
 ext {
   // Android dependencies.
-  supportFragment = 'androidx.fragment:fragment:1.1.0'
+  supportFragment = 'androidx.fragment:fragment:1.2.1'
   supportAnnotations = 'androidx.annotation:annotation:1.1.0'
   supportTestRunner = 'androidx.test.ext:junit:1.1.1'
   androidxTestRunner = 'androidx.test:runner:1.2.0' // for androidx.test.filters
 
-  supportSqlite = 'androidx.sqlite:sqlite:2.0.1'
-  supportSqliteFramework = 'androidx.sqlite:sqlite-framework:2.0.1'
+  supportSqlite = 'androidx.sqlite:sqlite:2.1.0'
+  supportSqliteFramework = 'androidx.sqlite:sqlite-framework:2.1.0'
 
   // Third-party dependencies.
-  dagger = 'com.google.dagger:dagger:2.25.4'
-  daggerCompiler = 'com.google.dagger:dagger-compiler:2.25.4'
+  dagger = 'com.google.dagger:dagger:2.26'
+  daggerCompiler = 'com.google.dagger:dagger-compiler:2.26'
   timber = 'com.jakewharton.timber:timber:4.7.1'
   autoValue = 'com.google.auto.value:auto-value:1.7'
   autoValueAnnotations = 'com.google.auto.value:auto-value-annotations:1.7'
   autoValueParcel = 'com.ryanharter.auto.value:auto-value-parcel:0.2.8'
-  rxJava = 'io.reactivex.rxjava2:rxjava:2.2.16'
-  rxAndroid = 'io.reactivex.rxjava2:rxandroid:2.1.1'
-  rxBinding = 'com.jakewharton.rxbinding2:rxbinding:2.2.0'
-  junit = 'junit:junit:4.12'
-  truth = 'com.google.truth:truth:1.0'
+  rxJava = 'io.reactivex.rxjava3:rxjava:3.0.0'
+  rxAndroid = 'io.reactivex.rxjava3:rxandroid:3.0.0'
+  // Removing RxBinding usage until it supports RxJava3
+  // https://github.com/JakeWharton/RxBinding/issues/531
+  // rxBinding = 'com.jakewharton.rxbinding3:rxbinding:3.1.0'
+  junit = 'junit:junit:4.13'
+  truth = 'com.google.truth:truth:1.0.1'
 
   // Lint dependencies.
   lintApi = "com.android.tools.lint:lint-api:${versions.lint}"
@@ -58,7 +60,7 @@ ext {
 
   // Checker dependencies.
   // run checker with `assembleCheckTypes`
-  checkerFrameworkVersion = "3.1.0"
+  checkerFrameworkVersion = "3.1.1"
   checkerQualAndroid = "org.checkerframework:checker-qual-android:${checkerFrameworkVersion}"
   checker = "org.checkerframework:checker:${checkerFrameworkVersion}"
   checkerJdk8 = "org.checkerframework:jdk8:${checkerFrameworkVersion}"

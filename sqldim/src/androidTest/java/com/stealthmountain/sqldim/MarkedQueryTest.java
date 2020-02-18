@@ -41,13 +41,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import io.reactivex.Observable;
-import io.reactivex.functions.BiFunction;
-import io.reactivex.observers.TestObserver;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.functions.BiFunction;
+import io.reactivex.rxjava3.observers.TestObserver;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_NONE;
 import static com.google.common.truth.Truth.assertThat;
+import static com.stealthmountain.sqldim.AssertErrorMessagePredicate.assertErrorMessage;
 import static com.stealthmountain.sqldim.SqlDim.MarkedQuery.MarkedValue;
 import static com.stealthmountain.sqldim.TestDb.Employee.MARKED_MAPPER;
 import static com.stealthmountain.sqldim.TestDb.SELECT_EMPLOYEES;
@@ -108,7 +109,7 @@ public final class MarkedQueryTest {
         }))
         .test()
         .assertError(NullPointerException.class)
-        .assertErrorMessage("QueryToOne mapper returned null");
+        .assertError(assertErrorMessage("QueryToOne mapper returned null"));
   }
 
   @Test public void mapToOneThrowsOnMultipleRows() {
@@ -188,7 +189,7 @@ public final class MarkedQueryTest {
         }, new Employee("fred", "Fred Frederson")))
         .test()
         .assertError(NullPointerException.class)
-        .assertErrorMessage("QueryToOne mapper returned null");
+        .assertError(assertErrorMessage("QueryToOne mapper returned null"));
   }
 
   @Test public void mapToOneOrDefaultThrowsOnMultipleRows() {
@@ -313,8 +314,6 @@ public final class MarkedQueryTest {
     @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     @NonNull final BiFunction<Cursor, Set<String>, Employee> mapToNull = new BiFunction<Cursor, Set<String>, Employee>() {
-      private int count;
-
       @NonNull @Override public Employee apply(@NonNull Cursor cursor, @NonNull Set<String> markers) {
         //noinspection ConstantConditions
         return null;
@@ -336,8 +335,6 @@ public final class MarkedQueryTest {
     @NonNull final DimDatabase<String> db = Objects.requireNonNull(this.db);
 
     @NonNull final BiFunction<Cursor, Set<String>, Employee> mapToNull = new BiFunction<Cursor, Set<String>, Employee>() {
-      private int count;
-
       @NonNull @Override public Employee apply(@NonNull Cursor cursor, @NonNull Set<String> markers) {
         //noinspection ConstantConditions
         return null;
@@ -425,7 +422,7 @@ public final class MarkedQueryTest {
         }))
         .test()
         .assertError(NullPointerException.class)
-        .assertErrorMessage("QueryToOne mapper returned null");
+        .assertError(assertErrorMessage("QueryToOne mapper returned null"));
   }
 
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.N)
@@ -436,7 +433,7 @@ public final class MarkedQueryTest {
         .lift(MarkedQuery.mapToOptional(MARKED_MAPPER))
         .test()
         .assertError(IllegalStateException.class)
-        .assertErrorMessage("Cursor returned more than 1 row");
+        .assertError(assertErrorMessage("Cursor returned more than 1 row"));
   }
 
   @SdkSuppress(minSdkVersion = Build.VERSION_CODES.N)

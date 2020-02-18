@@ -28,8 +28,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
 
-import io.reactivex.Observable;
-import io.reactivex.functions.BiFunction;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.functions.BiFunction;
 
 public final class MarkedQueryObservableTest {
   @Test public void mapToListThrowsFromQueryRun() {

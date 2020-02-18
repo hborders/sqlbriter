@@ -25,14 +25,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.WorkerThread;
 import android.util.Log;
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.ObservableOperator;
-import io.reactivex.ObservableSource;
-import io.reactivex.ObservableTransformer;
-import io.reactivex.Scheduler;
-import io.reactivex.functions.BiFunction;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,6 +32,16 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableEmitter;
+import io.reactivex.rxjava3.core.ObservableOnSubscribe;
+import io.reactivex.rxjava3.core.ObservableOperator;
+import io.reactivex.rxjava3.core.ObservableSource;
+import io.reactivex.rxjava3.core.ObservableTransformer;
+import io.reactivex.rxjava3.core.Scheduler;
+import io.reactivex.rxjava3.functions.BiFunction;
+import io.reactivex.rxjava3.functions.Function;
 
 /**
  * A lightweight wrapper around {@link SupportSQLiteOpenHelper} which allows for continuously
@@ -356,7 +358,7 @@ public final class SqlDim<M> {
     @CheckResult @NonNull
     public final <T> Observable<T> asRows(@NonNull final BiFunction<Cursor, Set<M>, T> mapper) {
       return Observable.create(new ObservableOnSubscribe<T>() {
-        @Override public void subscribe(@NonNull ObservableEmitter<T> e) throws Exception {
+        @Override public void subscribe(@NonNull ObservableEmitter<T> e) throws Throwable {
           @Nullable final Cursor cursor = run();
           if (cursor != null) {
             try {
@@ -390,7 +392,7 @@ public final class SqlDim<M> {
      * @param mapper Maps the current {@link Cursor} row to {@code T}. May not return null.
      */
     @CheckResult @NonNull //
-    public static <T> ObservableOperator<T, Query> mapToOne(@NonNull FunctionRR<Cursor, T> mapper) {
+    public static <T> ObservableOperator<T, Query> mapToOne(@NonNull Function<Cursor, T> mapper) {
       return new QueryToOneOperator<>(mapper, null);
     }
 
@@ -410,7 +412,7 @@ public final class SqlDim<M> {
     @SuppressWarnings("ConstantConditions") // Public API contract.
     @CheckResult @NonNull
     public static <T> ObservableOperator<T, Query> mapToOneOrDefault(
-        @NonNull FunctionRR<Cursor, T> mapper, @NonNull T defaultValue) {
+        @NonNull Function<Cursor, T> mapper, @NonNull T defaultValue) {
       if (defaultValue == null) throw new NullPointerException("defaultValue == null");
       return new QueryToOneOperator<>(mapper, defaultValue);
     }
@@ -430,7 +432,7 @@ public final class SqlDim<M> {
     @RequiresApi(Build.VERSION_CODES.N) //
     @CheckResult @NonNull //
     public static <T> ObservableOperator<Optional<T>, Query> mapToOptional(
-        @NonNull FunctionRR<Cursor, T> mapper) {
+        @NonNull Function<Cursor, T> mapper) {
       return new QueryToOptionalOperator<>(mapper);
     }
 
@@ -448,7 +450,7 @@ public final class SqlDim<M> {
      */
     @CheckResult @NonNull
     public static <T> ObservableOperator<List<T>, Query> mapToList(
-        @NonNull FunctionRR<Cursor, T> mapper) {
+        @NonNull Function<Cursor, T> mapper) {
       return new QueryToListOperator<>(mapper, ArrayList::new);
     }
 
@@ -467,7 +469,7 @@ public final class SqlDim<M> {
      */
     @CheckResult @NonNull
     public static <L extends List<T>, T> ObservableOperator<L, Query> mapToSpecificList(
-        @NonNull FunctionRR<Cursor, T> mapper, @NonNull NewList<L, T> newList) {
+        @NonNull Function<Cursor, T> mapper, @NonNull NewList<L, T> newList) {
       return new QueryToListOperator<>(mapper, newList);
     }
 
@@ -525,14 +527,14 @@ public final class SqlDim<M> {
      * The resulting observable will be empty if {@code null} is returned from {@link #run()}.
      */
     @CheckResult @NonNull
-    public final <T> Observable<T> asRows(@NonNull final FunctionRR<Cursor, T> mapper) {
+    public final <T> Observable<T> asRows(@NonNull final Function<Cursor, T> mapper) {
       return Observable.create(new ObservableOnSubscribe<T>() {
-        @Override public void subscribe(@NonNull ObservableEmitter<T> e) throws Exception {
+        @Override public void subscribe(@NonNull ObservableEmitter<T> e) throws Throwable {
           @Nullable final Cursor cursor = run();
           if (cursor != null) {
             try {
               while (cursor.moveToNext() && !e.isDisposed()) {
-                e.onNext(Objects.requireNonNull(mapper.applyRR(cursor)));
+                e.onNext(Objects.requireNonNull(mapper.apply(cursor)));
               }
             } finally {
               cursor.close();

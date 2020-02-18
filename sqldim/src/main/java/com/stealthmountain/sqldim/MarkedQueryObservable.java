@@ -11,21 +11,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import io.reactivex.Observable;
-import io.reactivex.Observer;
-import io.reactivex.functions.BiFunction;
-import io.reactivex.functions.Function;
+
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableConverter;
+import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.functions.BiFunction;
+import io.reactivex.rxjava3.functions.Function;
 
 import static com.stealthmountain.sqldim.SqlDim.MarkedQuery;
 import static com.stealthmountain.sqldim.SqlDim.MarkedQuery.MarkedValue;
 
 /** An {@link Observable} of {@link MarkedQuery} which offers query-specific convenience operators. */
 public final class MarkedQueryObservable<M> extends Observable<MarkedQuery<M>> {
-  /** This can't be a {@link FunctionRR} because it has to interact directly with RxJava */
-  @NonNull static <M> Function<Observable<MarkedQuery<M>>, MarkedQueryObservable<M>> markedQueryObserable() {
-    return new Function<Observable<MarkedQuery<M>>, MarkedQueryObservable<M>>() {
-      @NonNull
-      @Override
+  @NonNull static <M> ObservableConverter<MarkedQuery<M>, MarkedQueryObservable<M>> markedQueryObserable() {
+    return new ObservableConverter<MarkedQuery<M>, MarkedQueryObservable<M>>() {
+      @NonNull @Override
       public MarkedQueryObservable<M> apply(@NonNull Observable<MarkedQuery<M>> queryObservable) {
         return new MarkedQueryObservable<>(queryObservable);
       }

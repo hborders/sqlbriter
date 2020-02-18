@@ -22,7 +22,9 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import androidx.annotation.NonNull;
 
-import io.reactivex.functions.BiFunction;
+import io.reactivex.rxjava3.functions.BiFunction;
+import io.reactivex.rxjava3.functions.Function;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
@@ -57,8 +59,8 @@ final class TestDb extends SupportSQLiteOpenHelper.Callback {
   }
 
   static final class Employee {
-    @NonNull static final FunctionRR<Cursor, Employee> MAPPER = new FunctionRR<Cursor, Employee>() {
-      @NonNull @Override public Employee applyRR(@NonNull Cursor cursor) {
+    @NonNull static final Function<Cursor, Employee> MAPPER = new Function<Cursor, Employee>() {
+      @NonNull @Override public Employee apply(@NonNull Cursor cursor) {
         return new Employee( //
                 cursor.getString(cursor.getColumnIndexOrThrow(EmployeeTable.USERNAME)),
                 cursor.getString(cursor.getColumnIndexOrThrow(EmployeeTable.NAME)));

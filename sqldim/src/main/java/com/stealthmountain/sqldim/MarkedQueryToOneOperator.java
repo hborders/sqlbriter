@@ -22,12 +22,12 @@ import androidx.annotation.Nullable;
 
 import java.util.Set;
 
-import io.reactivex.ObservableOperator;
-import io.reactivex.Observer;
-import io.reactivex.exceptions.Exceptions;
-import io.reactivex.functions.BiFunction;
-import io.reactivex.observers.DisposableObserver;
-import io.reactivex.plugins.RxJavaPlugins;
+import io.reactivex.rxjava3.core.ObservableOperator;
+import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.exceptions.Exceptions;
+import io.reactivex.rxjava3.functions.BiFunction;
+import io.reactivex.rxjava3.observers.DisposableObserver;
+import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 
 import static com.stealthmountain.sqldim.SqlDim.MarkedQuery;
 import static com.stealthmountain.sqldim.SqlDim.MarkedQuery.MarkedValue;

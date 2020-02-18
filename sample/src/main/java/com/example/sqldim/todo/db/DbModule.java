@@ -26,8 +26,9 @@ import com.stealthmountain.sqldim.DimDatabase;
 import com.stealthmountain.sqldim.SqlDim;
 import dagger.Module;
 import dagger.Provides;
-import io.reactivex.schedulers.Schedulers;
 import javax.inject.Singleton;
+
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import timber.log.Timber;
 
 @Module

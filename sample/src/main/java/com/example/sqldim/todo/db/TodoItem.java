@@ -24,7 +24,8 @@ import androidx.annotation.NonNull;
 import com.google.auto.value.AutoValue;
 
 import java.util.Objects;
-import com.stealthmountain.sqldim.FunctionRR;
+
+import io.reactivex.rxjava3.functions.Function;
 
 @AutoValue
 public abstract class TodoItem implements Parcelable {
@@ -40,8 +41,8 @@ public abstract class TodoItem implements Parcelable {
   @NonNull public abstract String description();
   public abstract boolean complete();
 
-  public static final FunctionRR<Cursor, TodoItem> MAPPER = new FunctionRR<Cursor, TodoItem>() {
-    @NonNull @Override public TodoItem applyRR(@NonNull Cursor cursor) {
+  public static final Function<Cursor, TodoItem> MAPPER = new Function<Cursor, TodoItem>() {
+    @NonNull @Override public TodoItem apply(@NonNull Cursor cursor) {
       long id = Db.getLong(cursor, ID);
       long listId = Db.getLong(cursor, LIST_ID);
       @NonNull String description = Objects.requireNonNull(Db.getString(cursor, DESCRIPTION));

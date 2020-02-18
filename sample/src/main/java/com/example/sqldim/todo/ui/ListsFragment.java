@@ -33,9 +33,10 @@ import com.example.sqldim.todo.R;
 import com.example.sqldim.todo.TodoApp;
 import com.stealthmountain.sqldim.DimDatabase;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
 import javax.inject.Inject;
+
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 import static androidx.core.view.MenuItemCompat.SHOW_AS_ACTION_IF_ROOM;
 import static androidx.core.view.MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT;

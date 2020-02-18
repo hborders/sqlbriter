@@ -32,14 +32,6 @@ import androidx.annotation.WorkerThread;
 import com.stealthmountain.sqldim.SqlDim.Logger;
 import com.stealthmountain.sqldim.SqlDim.MarkedQuery;
 import com.stealthmountain.sqldim.SqlDim.Query;
-import io.reactivex.Observable;
-import io.reactivex.ObservableTransformer;
-import io.reactivex.Scheduler;
-import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
-import io.reactivex.functions.Predicate;
-import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
 import java.io.Closeable;
 import java.lang.annotation.Retention;
 import java.util.Arrays;
@@ -49,6 +41,16 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableTransformer;
+import io.reactivex.rxjava3.core.Scheduler;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.functions.Consumer;
+import io.reactivex.rxjava3.functions.Function;
+import io.reactivex.rxjava3.functions.Predicate;
+import io.reactivex.rxjava3.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.Subject;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT;
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_FAIL;
@@ -493,7 +495,7 @@ public final class DimDatabase<M> implements Closeable {
     return triggers //
             .filter(query) // DatabaseQuery filters triggers to on tables we care about.
             .map(query) // DatabaseQuery maps to itself to save an allocation.
-            .startWith(query) //
+            .startWith(Single.just(query)) //
             .observeOn(scheduler) //
             .compose(queryTransformer) // Apply the user's query transformer.
             .doOnSubscribe(ensureNotInTransaction)
@@ -511,7 +513,7 @@ public final class DimDatabase<M> implements Closeable {
     return triggers //
             .filter(toMarkedDatabaseQuery) // DatabaseQuery filters triggers to on tables we care about.
             .map(toMarkedDatabaseQuery) // DatabaseQuery maps to itself to save an allocation.
-            .startWith(toMarkedDatabaseQuery.initialMarkedQuery()) //
+            .startWith(Single.just(toMarkedDatabaseQuery.initialMarkedQuery())) //
             .observeOn(scheduler) //
             .compose(markedQueryTransformer) // Apply the user's toMarkedDatabaseQuery transformer.
             .doOnSubscribe(ensureNotInTransaction)

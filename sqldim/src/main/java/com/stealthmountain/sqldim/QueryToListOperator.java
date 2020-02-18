@@ -24,18 +24,19 @@ import com.stealthmountain.sqldim.SqlDim.Query;
 
 import java.util.List;
 
-import io.reactivex.ObservableOperator;
-import io.reactivex.Observer;
-import io.reactivex.exceptions.Exceptions;
-import io.reactivex.observers.DisposableObserver;
-import io.reactivex.plugins.RxJavaPlugins;
+import io.reactivex.rxjava3.core.ObservableOperator;
+import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.exceptions.Exceptions;
+import io.reactivex.rxjava3.functions.Function;
+import io.reactivex.rxjava3.observers.DisposableObserver;
+import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 
 final class QueryToListOperator<L extends List<T>, T> implements ObservableOperator<L, Query> {
 
-  @NonNull private final FunctionRR<Cursor, T> mapper;
+  @NonNull private final Function<Cursor, T> mapper;
   @NonNull private final NewList<L, T> newList;
 
-  QueryToListOperator(@NonNull FunctionRR<Cursor, T> mapper, @NonNull NewList<L, T> newList) {
+  QueryToListOperator(@NonNull Function<Cursor, T> mapper, @NonNull NewList<L, T> newList) {
     this.mapper = mapper;
     this.newList = newList;
   }
@@ -47,11 +48,11 @@ final class QueryToListOperator<L extends List<T>, T> implements ObservableOpera
 
   static final class MappingObserver<L extends List<T>, T> extends DisposableObserver<Query> {
     @NonNull private final Observer<? super L> downstream;
-    @NonNull private final FunctionRR<Cursor, T> mapper;
+    @NonNull private final Function<Cursor, T> mapper;
     @NonNull private final NewList<L, T> newList;
 
     MappingObserver(@NonNull Observer<? super L> downstream,
-                    @NonNull FunctionRR<Cursor, T> mapper, @NonNull NewList<L, T> newList) {
+                    @NonNull Function<Cursor, T> mapper, @NonNull NewList<L, T> newList) {
       this.downstream = downstream;
       this.mapper = mapper;
       this.newList = newList;
@@ -71,7 +72,7 @@ final class QueryToListOperator<L extends List<T>, T> implements ObservableOpera
         @NonNull final L items = newList.newList(cursor.getCount());
         try {
           while (cursor.moveToNext()) {
-            item = mapper.applyRR(cursor);
+            item = mapper.apply(cursor);
             // even though the type system should make this impossible,
             // Java doesn't always check nullability annotations,
             // so leave this in just in case our clients don't follow the rules.

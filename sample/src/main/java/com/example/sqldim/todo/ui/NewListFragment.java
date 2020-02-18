@@ -29,15 +29,16 @@ import android.widget.EditText;
 import com.example.sqldim.todo.R;
 import com.example.sqldim.todo.TodoApp;
 import com.example.sqldim.todo.db.TodoList;
-import com.jakewharton.rxbinding2.widget.RxTextView;
+import com.example.sqldim.todo.rxbinding.RxTextView;
 import com.stealthmountain.sqldim.DimDatabase;
 
-import io.reactivex.Observable;
-import io.reactivex.functions.BiFunction;
-import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.PublishSubject;
 import javax.inject.Inject;
+
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.functions.BiFunction;
+import io.reactivex.rxjava3.functions.Consumer;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.subjects.PublishSubject;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_NONE;
 

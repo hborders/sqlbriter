@@ -21,7 +21,8 @@ import android.database.MatrixCursor;
 import androidx.annotation.NonNull;
 
 import com.stealthmountain.sqldim.SqlDim.Query;
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.functions.Function;
 
 import org.junit.Test;
 
@@ -36,8 +37,8 @@ public final class QueryObservableTest {
       }
     };
     new QueryObservable(Observable.just(query)) //
-        .mapToList(new FunctionRR<Cursor, Object>() {
-          @NonNull @Override public Object applyRR(@NonNull Cursor cursor) {
+        .mapToList(new Function<Cursor, Object>() {
+          @NonNull @Override public Object apply(@NonNull Cursor cursor) {
             throw new AssertionError("Must not be called");
           }
         }) //
@@ -54,8 +55,8 @@ public final class QueryObservableTest {
       }
     };
     new QueryObservable(Observable.just(query)) //
-        .mapToSpecificList(new FunctionRR<Cursor, Object>() {
-          @NonNull @Override public Object applyRR(@NonNull Cursor cursor) {
+        .mapToSpecificList(new Function<Cursor, Object>() {
+          @NonNull @Override public Object apply(@NonNull Cursor cursor) {
             throw new AssertionError("Must not be called");
           }
         }, ArrayList::new) //
@@ -75,8 +76,8 @@ public final class QueryObservableTest {
 
     @NonNull final IllegalStateException error = new IllegalStateException("test exception");
     new QueryObservable(Observable.just(query)) //
-        .mapToList(new FunctionRR<Cursor, Object>() {
-          @NonNull @Override public Object applyRR(@NonNull Cursor cursor) {
+        .mapToList(new Function<Cursor, Object>() {
+          @NonNull @Override public Object apply(@NonNull Cursor cursor) {
             throw error;
           }
         }) //
@@ -96,8 +97,8 @@ public final class QueryObservableTest {
 
     @NonNull final IllegalStateException error = new IllegalStateException("test exception");
     new QueryObservable(Observable.just(query)) //
-        .mapToSpecificList(new FunctionRR<Cursor, Object>() {
-          @NonNull @Override public Object applyRR(@NonNull Cursor cursor) {
+        .mapToSpecificList(new Function<Cursor, Object>() {
+          @NonNull @Override public Object apply(@NonNull Cursor cursor) {
             throw error;
           }
         }, ArrayList::new) //

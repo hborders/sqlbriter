@@ -28,10 +28,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.sqldim.todo.db.TodoItem;
-import io.reactivex.functions.Consumer;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+
+import io.reactivex.rxjava3.functions.Consumer;
 
 final class ItemsAdapter extends BaseAdapter implements Consumer<List<TodoItem>> {
   private final LayoutInflater inflater;
