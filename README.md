@@ -178,7 +178,7 @@ Download
 --------
 
 ```groovy
-implementation 'com.stealthmountain.sqldim:sqldim:4.2.0'
+implementation 'com.stealthmountain.sqldim:sqldim:5.0.0'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
@@ -189,7 +189,7 @@ License
 -------
 
     Copyright 2015 Square, Inc.
-    Copyright 2019 Heath Borders
+    Copyright 2020 Heath Borders
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
