@@ -60,7 +60,7 @@ ext {
 
   // Checker dependencies.
   // run checker with `assembleCheckTypes`
-  checkerFrameworkVersion = "3.1.1"
+  checkerFrameworkVersion = "3.2.0"
   checkerQualAndroid = "org.checkerframework:checker-qual-android:${checkerFrameworkVersion}"
   checker = "org.checkerframework:checker:${checkerFrameworkVersion}"
   checkerJdk8 = "org.checkerframework:jdk8:${checkerFrameworkVersion}"
