@@ -2,7 +2,7 @@ buildscript {
   ext.versions = [
       'minSdk': 14,
       'compileSdk': 29,
-      'lint': '26.5.3'
+      'lint': '26.6.1'
   ]
 
   repositories {
@@ -12,8 +12,9 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.5.3'
+    classpath 'com.android.tools.build:gradle:3.6.1'
     classpath 'com.vanniktech:gradle-maven-publish-plugin:0.8.0'
+    classpath "com.github.ben-manes:gradle-versions-plugin:0.28.0"
   }
 }
 
