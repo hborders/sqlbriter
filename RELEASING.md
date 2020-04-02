@@ -4,8 +4,9 @@ Releasing
  1. Change the version in `gradle.properties` to a non-SNAPSHOT version.
  2. Update the `CHANGELOG.md` for the impending release.
  3. Update the `README.md` with the new version.
- 4. `./gradlew assembleCheckTypes # verify nullability`
- 5. `./gradlew dependencyUpdates # verify dependencies are up to date`
+ 4. `./gradlew dependencyUpdates # verify dependencies are up to date`
+ 5. `./gradlew assembleCheckTypes # verify nullability`
+ 5.1 Ensure you run assembleCheckTypes with JDK8. JDK9 has problems.
  6. `git commit -am "Prepare for release X.Y.Z."` (where X.Y.Z is the new version)
  7.
  [Create GPG key](https://proandroiddev.com/publishing-a-maven-artifact-3-3-step-by-step-instructions-to-mavencentral-publishing-bd661081645d)

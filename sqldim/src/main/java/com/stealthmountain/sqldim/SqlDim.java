@@ -15,16 +15,17 @@
  */
 package com.stealthmountain.sqldim;
 
-import androidx.sqlite.db.SupportSQLiteOpenHelper;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.os.Build;
+import android.util.Log;
+
 import androidx.annotation.CheckResult;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.WorkerThread;
-import android.util.Log;
+import androidx.sqlite.db.SupportSQLiteOpenHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -315,7 +316,7 @@ public final class SqlDim<M> {
     /**
      * Just for the method reference, you should probably use {@link #markers}
      */
-    @Nullable
+    @NonNull
     public Set<M> getMarkers() {
       return markers;
     }
@@ -356,7 +357,7 @@ public final class SqlDim<M> {
      * The resulting observable will be empty if {@code null} is returned from {@link #run()}.
      */
     @CheckResult @NonNull
-    public final <T> Observable<T> asRows(@NonNull final BiFunction<Cursor, Set<M>, T> mapper) {
+    public final <T> Observable<T> asRows(@NonNull final NonNullBiFunction<Cursor, Set<M>, T> mapper) {
       return Observable.create(new ObservableOnSubscribe<T>() {
         @Override public void subscribe(@NonNull ObservableEmitter<T> e) throws Throwable {
           @Nullable final Cursor cursor = run();
@@ -527,7 +528,7 @@ public final class SqlDim<M> {
      * The resulting observable will be empty if {@code null} is returned from {@link #run()}.
      */
     @CheckResult @NonNull
-    public final <T> Observable<T> asRows(@NonNull final Function<Cursor, T> mapper) {
+    public final <T> Observable<T> asRows(@NonNull final NonNullFunction<Cursor, T> mapper) {
       return Observable.create(new ObservableOnSubscribe<T>() {
         @Override public void subscribe(@NonNull ObservableEmitter<T> e) throws Throwable {
           @Nullable final Cursor cursor = run();

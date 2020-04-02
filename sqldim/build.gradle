@@ -80,6 +80,9 @@ gradle.projectsEvaluated {
               "-Xbootclasspath/p:${configurations.checkerFrameworkAnnotatedJDK.asPath}"
       ]
       options.fork = true
+      // gradle 6.3 causes
+      // org.codehaus.groovy.runtime.GStringImpl cannot be cast to java.base/java.lang.String
+      // on the line below
       options.forkOptions.jvmArgs += ["-Xbootclasspath/p:${configurations.errorproneJavac.asPath}"]
     }
   }
