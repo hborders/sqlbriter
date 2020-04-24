@@ -2,7 +2,7 @@ buildscript {
   ext.versions = [
       'minSdk': 14,
       'compileSdk': 29,
-      'lint': '26.6.2'
+      'lint': '26.6.3'
   ]
 
   repositories {
@@ -12,7 +12,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.6.2'
+    classpath 'com.android.tools.build:gradle:3.6.3'
     classpath 'com.vanniktech:gradle-maven-publish-plugin:0.8.0'
     classpath "com.github.ben-manes:gradle-versions-plugin:0.28.0"
   }
@@ -46,7 +46,7 @@ ext {
   autoValue = 'com.google.auto.value:auto-value:1.7'
   autoValueAnnotations = 'com.google.auto.value:auto-value-annotations:1.7'
   autoValueParcel = 'com.ryanharter.auto.value:auto-value-parcel:0.2.8'
-  rxJava = 'io.reactivex.rxjava3:rxjava:3.0.1'
+  rxJava = 'io.reactivex.rxjava3:rxjava:3.0.2'
   rxAndroid = 'io.reactivex.rxjava3:rxandroid:3.0.0'
   // Removing RxBinding usage until it supports RxJava3
   // https://github.com/JakeWharton/RxBinding/issues/531
