@@ -25,19 +25,20 @@ dependencies {
 
   compileOnly rootProject.ext.checkerQualAndroid
   annotationProcessor rootProject.ext.checker
-  checkerFrameworkAnnotatedJDK rootProject.ext.checkerJdk8
   errorproneJavac rootProject.ext.errorproneJavac
 }
 
 android {
   buildTypes {
     checkTypes {
-      javaCompileOptions.annotationProcessorOptions.
-              classNames.add("org.checkerframework.checker.nullness.NullnessChecker")
+      javaCompileOptions.annotationProcessorOptions.classNames.add("org.checkerframework.checker.nullness.NullnessChecker")
       javaCompileOptions.annotationProcessorOptions.arguments.put("stubs", project.file('src/main/stubs').path)
       javaCompileOptions.annotationProcessorOptions.arguments.put("stubWarnIfNotFound", null)
       // You can pass options like so:
       // javaCompileOptions.annotationProcessorOptions.arguments.put("warns", "")
+
+      // https://github.com/typetools/checker-framework/issues/3043 workaround
+      javaCompileOptions.annotationProcessorOptions.arguments.put("nocheckjdk", "")
     }
   }
 
@@ -76,9 +77,6 @@ android {
 gradle.projectsEvaluated {
   tasks.withType(JavaCompile).all { compile ->
     if (compile.name.contains("CheckTypes")) {
-      compile.options.compilerArgs += [
-              "-Xbootclasspath/p:${configurations.checkerFrameworkAnnotatedJDK.asPath}"
-      ]
       options.fork = true
       // gradle 6.3 causes
       // org.codehaus.groovy.runtime.GStringImpl cannot be cast to java.base/java.lang.String

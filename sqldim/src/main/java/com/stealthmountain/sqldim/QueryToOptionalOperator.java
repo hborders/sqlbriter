@@ -84,7 +84,16 @@ final class QueryToOptionalOperator<T> implements ObservableOperator<Optional<T>
           item = null;
         }
         if (!isDisposed()) {
-          downstream.onNext(Optional.ofNullable(item));
+          // Checker 3.4.0 requires more verbosity. I don't know why. Asked for help:
+          // https://groups.google.com/d/msg/checker-framework-discuss/VSjtygYFnV8/-tCjNwVzAAAJ
+          // @NonNull final Optional<T> optional = Optional.ofNullable(item);
+          @NonNull final Optional<T> optional;
+          if (item == null) {
+            optional = Optional.empty();
+          } else {
+            optional = Optional.of(item);
+          }
+          downstream.onNext(optional);
         }
       } catch (Throwable e) {
         Exceptions.throwIfFatal(e);
