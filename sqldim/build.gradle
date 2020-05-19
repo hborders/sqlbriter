@@ -25,7 +25,6 @@ dependencies {
 
   compileOnly rootProject.ext.checkerQualAndroid
   annotationProcessor rootProject.ext.checker
-  checkerFrameworkAnnotatedJDK rootProject.ext.checkerJdk8
   errorproneJavac rootProject.ext.errorproneJavac
 }
 
@@ -76,9 +75,6 @@ android {
 gradle.projectsEvaluated {
   tasks.withType(JavaCompile).all { compile ->
     if (compile.name.contains("CheckTypes")) {
-      compile.options.compilerArgs += [
-              "-Xbootclasspath/p:${configurations.checkerFrameworkAnnotatedJDK.asPath}"
-      ]
       options.fork = true
       // gradle 6.3 causes
       // org.codehaus.groovy.runtime.GStringImpl cannot be cast to java.base/java.lang.String

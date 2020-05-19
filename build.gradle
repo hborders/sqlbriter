@@ -61,11 +61,8 @@ ext {
 
   // Checker dependencies.
   // run checker with `assembleCheckTypes`
-  checkerFrameworkVersion = "3.3.0"
-  // https://github.com/typetools/checker-framework/issues/3318
-  // checkerFrameworkVersion = "3.4.0"
+  checkerFrameworkVersion = "3.4.0" // doesn't work: https://github.com/typetools/checker-framework/issues/3318
   checkerQualAndroid = "org.checkerframework:checker-qual-android:${checkerFrameworkVersion}"
   checker = "org.checkerframework:checker:${checkerFrameworkVersion}"
-  checkerJdk8 = "org.checkerframework:jdk8:${checkerFrameworkVersion}"
   errorproneJavac = "com.google.errorprone:javac:9+181-r4173-1"
 }
