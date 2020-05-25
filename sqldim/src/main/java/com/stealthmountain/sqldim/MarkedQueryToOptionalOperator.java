@@ -93,7 +93,14 @@ final class MarkedQueryToOptionalOperator<M, T>
           item = null;
         }
         if (!isDisposed()) {
-          @NonNull final Optional<T> optional = Optional.ofNullable(item);
+          // Checker 3.4.0 requires more verbosity. I don't know why.
+          // @NonNull final Optional<T> optional = Optional.ofNullable(item);
+          @NonNull final Optional<T> optional;
+          if (item == null) {
+            optional = Optional.empty();
+          } else {
+            optional = Optional.of(item);
+          }
           @NonNull final MarkedValue<M, Optional<T>> markedValue = new MarkedValue<>(markers, optional);
           downstream.onNext(markedValue);
         }
