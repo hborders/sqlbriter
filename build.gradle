@@ -46,7 +46,7 @@ ext {
   autoValue = 'com.google.auto.value:auto-value:1.7'
   autoValueAnnotations = 'com.google.auto.value:auto-value-annotations:1.7'
   autoValueParcel = 'com.ryanharter.auto.value:auto-value-parcel:0.2.8'
-  rxJava = 'io.reactivex.rxjava3:rxjava:3.0.3'
+  rxJava = 'io.reactivex.rxjava3:rxjava:3.0.4'
   rxAndroid = 'io.reactivex.rxjava3:rxandroid:3.0.0'
   // Removing RxBinding usage until it supports RxJava3
   // https://github.com/JakeWharton/RxBinding/issues/531
