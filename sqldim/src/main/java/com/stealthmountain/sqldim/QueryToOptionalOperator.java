@@ -84,7 +84,8 @@ final class QueryToOptionalOperator<T> implements ObservableOperator<Optional<T>
           item = null;
         }
         if (!isDisposed()) {
-          downstream.onNext(Optional.ofNullable(item));
+          @NonNull final Optional<T> optional = Optional.ofNullable(item);
+          downstream.onNext(optional);
         }
       } catch (Throwable e) {
         Exceptions.throwIfFatal(e);
