@@ -16,9 +16,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.reactivex.rxjava3.functions.BiFunction;
-import io.reactivex.rxjava3.functions.Function;
-
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
@@ -96,7 +93,7 @@ public final class SqlDimTest {
     @NonNull final Query query = new CursorQuery(cursor);
     @NonNull final AtomicInteger count = new AtomicInteger();
     //noinspection ResultOfMethodCallIgnored
-    query.asRows(new Function<Cursor, Name>() {
+    query.asRows(new NonNullFunction<Cursor, Name>() {
       @NonNull @Override public Name apply(@NonNull Cursor cursor) throws Throwable {
         count.incrementAndGet();
         return Name.MAP.apply(cursor);
@@ -113,7 +110,7 @@ public final class SqlDimTest {
     @NonNull final MarkedQuery<String> markedQuery = new CursorMarkedQuery(cursor);
     @NonNull final AtomicInteger count = new AtomicInteger();
     //noinspection ResultOfMethodCallIgnored
-    markedQuery.asRows(new BiFunction<Cursor, Set<String>, Name>() {
+    markedQuery.asRows(new NonNullBiFunction<Cursor, Set<String>, Name>() {
       @NonNull @Override public Name apply(@NonNull Cursor cursor, @NonNull Set<String> markers) throws Throwable {
         count.incrementAndGet();
         return Name.MARKED_MAP.apply(cursor, markers);
@@ -130,7 +127,7 @@ public final class SqlDimTest {
     };
 
     @NonNull final AtomicInteger count = new AtomicInteger();
-    nully.asRows(new Function<Cursor, Name>() {
+    nully.asRows(new NonNullFunction<Cursor, Name>() {
       @NonNull @Override public Name apply(@NonNull Cursor cursor) throws Throwable {
         count.incrementAndGet();
         return Name.MAP.apply(cursor);
@@ -148,7 +145,7 @@ public final class SqlDimTest {
     };
 
     @NonNull final AtomicInteger count = new AtomicInteger();
-    nully.asRows(new BiFunction<Cursor, Set<String>, Name>() {
+    nully.asRows(new NonNullBiFunction<Cursor, Set<String>, Name>() {
       @NonNull @Override public Name apply(@NonNull Cursor cursor, @NonNull Set<String> markers) throws Throwable {
         count.incrementAndGet();
         return Name.MARKED_MAP.apply(cursor, markers);
@@ -159,7 +156,7 @@ public final class SqlDimTest {
   }
 
   static final class Name {
-    @NonNull static final Function<Cursor, Name> MAP = new Function<Cursor, Name>() {
+    @NonNull static final NonNullFunction<Cursor, Name> MAP = new NonNullFunction<Cursor, Name>() {
       @NonNull @Override public Name apply(@NonNull Cursor cursor) {
         return new Name( //
                 cursor.getString(cursor.getColumnIndexOrThrow(FIRST_NAME)),
@@ -167,7 +164,7 @@ public final class SqlDimTest {
       }
     };
 
-    @NonNull static final BiFunction<Cursor, Set<String>, Name> MARKED_MAP = new BiFunction<Cursor, Set<String>, Name>() {
+    @NonNull static final NonNullBiFunction<Cursor, Set<String>, Name> MARKED_MAP = new NonNullBiFunction<Cursor, Set<String>, Name>() {
       @NonNull @Override public Name apply(@NonNull Cursor cursor, @NonNull Set<String> markers) {
         return new Name( //
                 cursor.getString(cursor.getColumnIndexOrThrow(FIRST_NAME)),
